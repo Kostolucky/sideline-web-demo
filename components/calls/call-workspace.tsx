@@ -86,8 +86,13 @@ export function CallWorkspace({
   return (
     // ~67% / ~33% — enough for readable transcript lines on the left and a
     // legible conversation on the right.
-    <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-      <div className="min-w-0">
+    //
+    // On xl the grid is a fixed height and each column scrolls inside itself,
+    // so the coaching composer stays pinned in view instead of hanging off the
+    // bottom of a short page. The offset accounts for the page padding and the
+    // call header above. Below xl this unwinds and the page scrolls normally.
+    <div className="grid gap-6 xl:h-[calc(100dvh-11rem)] xl:grid-cols-[2fr_1fr]">
+      <div className="flex min-w-0 flex-col xl:overflow-hidden">
         <div
           role="tablist"
           aria-label="Call review mode"
@@ -128,7 +133,8 @@ export function CallWorkspace({
           id="call-tabpanel"
           role="tabpanel"
           aria-labelledby={`call-tab-${tab}`}
-          className="mt-4"
+          // Scrolls independently of the coaching column beside it.
+          className="mt-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1"
         >
           {/* Mounted in every tab, shown only in Recording — see the note above. */}
           {hasAudio && (
@@ -171,15 +177,17 @@ export function CallWorkspace({
         </div>
       </div>
 
-      <aside
-        id="coaching-rail"
-        className="min-w-0 xl:sticky xl:top-3 xl:max-h-[calc(100dvh-1.5rem)] xl:self-start xl:overflow-y-auto xl:pb-4"
-      >
+      {/* A full-height column, not a stack of cards: the conversation scrolls
+          inside it and the composer stays pinned at the bottom, so the rail
+          behaves like a chat window rather than more page content. Below xl it
+          stacks under the review content and falls back to its own height. */}
+      <aside id="coaching-rail" className="min-w-0 xl:h-full xl:overflow-hidden">
         <CoachingPanel
           callId={call.id}
           comments={comments}
           currentUserId={currentUserId}
           canComment={canComment}
+          role={canComment ? "admin" : "member"}
           lastReadAt={coachingLastReadAt}
           currentMs={currentMs}
           hasAudio={hasAudio}
