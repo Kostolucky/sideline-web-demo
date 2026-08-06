@@ -6,7 +6,6 @@ import { SidebarNav } from "@/components/app-shell/sidebar-nav";
 import { MobileNav } from "@/components/app-shell/mobile-nav";
 import { ContentContainer } from "@/components/app-shell/content-container";
 import { RECORD_ITEM } from "@/components/app-shell/nav-items";
-import { PersonaSwitcher } from "@/components/demo/persona-switcher";
 import { IncomingCoaching } from "@/components/demo/incoming-coaching";
 import { Avatar } from "@/components/ui/misc";
 import { roleLabel } from "@/lib/format";
@@ -63,10 +62,6 @@ export default function AppLayout({
         <SidebarNav role={toMemberRole(member.role)} />
 
         <div className="mt-auto">
-          <div className="mb-3 border-t border-border pt-3">
-            <PersonaSwitcher compact />
-          </div>
-
           {/* Prominent record CTA, sitting just above the account button. Solid
               green, like mobile's new-call FAB. */}
           <Link
