@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Calendar, Clock, Timer } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Avatar } from "@/components/ui/misc";
 import { EditableCallName } from "@/components/calls/editable-call-name";
 import {
@@ -11,28 +11,37 @@ import { formatDate, formatTime, formatDuration } from "@/lib/format";
 import type { CallRow, OrganizationMemberRow } from "@/lib/db/types";
 
 /**
- * Identity block for the call workspace: who recorded it, when, how long, and
- * where it is in processing — all above the fold, so the tabs below can be purely
- * about content. (These facts used to be buried in a "Call details" card inside
- * the summary tab.)
+ * Identity block for the call workspace: who recorded it, when, and how long.
+ *
+ * The metadata used to be four icon-label pairs — avatar+name, calendar+date,
+ * clock+time, timer+duration — which read as four competing things when it is
+ * really one line of provenance. It is now the rep's name plus two pills: when
+ * the call happened, and how long it ran. Date and time belong together; nobody
+ * reads one without the other.
  */
 export function CallHeader({
   call,
   rep,
+  action,
 }: {
   call: CallRow;
   rep: OrganizationMemberRow | null;
+  /** Rendered top-right, opposite the back link. The coaching toggle. */
+  action?: React.ReactNode;
 }) {
   const repLabel = rep?.display_name || rep?.email || "Unknown rep";
 
   return (
     <header className="flex flex-col gap-3">
-      <Link
-        href="/app/calls"
-        className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" /> Back to all calls
-      </Link>
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href="/app/calls"
+          className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to all calls
+        </Link>
+        {action}
+      </div>
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <EditableCallName callId={call.id} initialName={call.name} />
@@ -47,28 +56,21 @@ export function CallHeader({
         )}
       </div>
 
-      <dl className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-        <div className="flex items-center gap-2">
-          <dt className="sr-only">Recorded by</dt>
-          <dd className="flex items-center gap-2">
-            <Avatar
-              name={rep?.display_name}
-              email={rep?.email}
-              className="h-6 w-6 text-[10px]"
-            />
-            <span className="font-medium">{repLabel}</span>
-          </dd>
-        </div>
-        <Meta icon={<Calendar className="h-4 w-4" />} label="Date">
-          {formatDate(call.recorded_at)}
-        </Meta>
-        <Meta icon={<Clock className="h-4 w-4" />} label="Time">
-          {formatTime(call.recorded_at)}
-        </Meta>
-        <Meta icon={<Timer className="h-4 w-4" />} label="Duration">
-          {formatDuration(call.duration_seconds)}
-        </Meta>
-      </dl>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+        <span className="flex items-center gap-2">
+          <Avatar
+            name={rep?.display_name}
+            email={rep?.email}
+            className="h-6 w-6 text-[10px]"
+          />
+          <span className="font-medium">{repLabel}</span>
+        </span>
+
+        <Pill>
+          {formatDate(call.recorded_at)} · {formatTime(call.recorded_at)}
+        </Pill>
+        <Pill>{formatDuration(call.duration_seconds)}</Pill>
+      </div>
 
       {call.status === "failed" && call.error_message && (
         <p className="rounded-xl bg-danger/15 px-3 py-2 text-sm text-danger">
@@ -79,20 +81,10 @@ export function CallHeader({
   );
 }
 
-function Meta({
-  icon,
-  label,
-  children,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  children: React.ReactNode;
-}) {
+function Pill({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-1.5 text-muted-foreground">
-      <span aria-hidden>{icon}</span>
-      <dt className="sr-only">{label}</dt>
-      <dd className="text-foreground">{children}</dd>
-    </div>
+    <span className="rounded-full border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground">
+      {children}
+    </span>
   );
 }

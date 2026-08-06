@@ -231,7 +231,16 @@ export function CoachingPanel({
   );
 }
 
-/** One message. Side, colour and corner all encode who sent it. */
+/**
+ * One message.
+ *
+ * Three treatments, so the feed can be read at a glance:
+ *   • a recording reference is an outlined neutral chip on its own line ABOVE
+ *     the text — it is a pointer into the audio, not something anyone said, and
+ *     burying it inside a coloured bubble made it read as part of the sentence;
+ *   • the other person's message sits left on light grey, named;
+ *   • your own sits right in the brand tint.
+ */
 function MessageBubble({
   message,
   onSeek,
@@ -244,6 +253,18 @@ function MessageBubble({
 
   return (
     <div className={cn("flex flex-col", mine ? "items-end" : "items-start")}>
+      {timestampMs != null && (
+        <button
+          type="button"
+          onClick={() => onSeek(timestampMs)}
+          title="Jump to this moment"
+          className="mb-1 inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2 py-1 font-mono text-meta text-muted-foreground transition-colors hover:border-brand-text hover:text-brand-text"
+        >
+          <Play className="h-2.5 w-2.5" />
+          Recording {formatTimestamp(timestampMs)}
+        </button>
+      )}
+
       <div
         className={cn(
           "max-w-[88%] px-3 py-2",
@@ -251,34 +272,15 @@ function MessageBubble({
           // messaging app signals a side.
           mine
             ? "rounded-2xl rounded-br-sm bg-brand-tint"
-            : "rounded-2xl rounded-bl-sm bg-secondary",
+            : "rounded-2xl rounded-bl-sm border border-border bg-secondary",
           unread && !mine && "ring-1 ring-brand-text/40",
         )}
       >
-        {(authorName || timestampMs != null) && (
-          <div className="mb-0.5 flex flex-wrap items-center gap-x-1.5 text-meta">
-            {authorName && (
-              <span className="font-semibold text-brand-text">{authorName}</span>
-            )}
-            {authorName && timestampMs != null && (
-              <span className="text-muted-foreground" aria-hidden>
-                ·
-              </span>
-            )}
-            {timestampMs != null && (
-              <button
-                type="button"
-                onClick={() => onSeek(timestampMs)}
-                title="Jump to this moment"
-                className="inline-flex items-center gap-1 rounded font-mono text-brand-text transition-opacity hover:opacity-80"
-              >
-                <Play className="h-2.5 w-2.5" />
-                Recording {formatTimestamp(timestampMs)}
-              </button>
-            )}
-          </div>
+        {authorName && (
+          <p className="mb-0.5 text-meta font-semibold text-brand-text">
+            {authorName}
+          </p>
         )}
-
         <p className="whitespace-pre-line text-sm leading-relaxed">{body}</p>
       </div>
 

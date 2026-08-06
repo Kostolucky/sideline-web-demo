@@ -9,6 +9,8 @@ import {
 } from "@/components/calls/audio-player";
 import { CoachingPanel } from "@/components/coaching/coaching-panel";
 import { CallHeader } from "@/components/calls/call-header";
+import { AskBar } from "@/components/calls/ask-bar";
+import { MessageSquareText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type {
   CallRow,
@@ -67,6 +69,12 @@ export function CallWorkspace({
   coachingLastReadAt: string | null;
 }) {
   const [tab, setTab] = React.useState<Tab>("summary");
+  /**
+   * Closed on arrival. Reading the call comes first; coaching is what you do
+   * once you have something to say about it, and a permanent third of the
+   * screen spent on an empty thread crowded the thing people came to read.
+   */
+  const [coachingOpen, setCoachingOpen] = React.useState(false);
   const [currentMs, setCurrentMs] = React.useState(0);
   const [playing, setPlaying] = React.useState(false);
   const playerRef = React.useRef<AudioPlayerHandle>(null);
@@ -96,9 +104,20 @@ export function CallWorkspace({
     //
     // Below xl it unwinds into a normal stacked page that scrolls.
     <div className="flex flex-col xl:h-dvh xl:flex-row">
-      <div className="flex min-w-0 flex-1 flex-col xl:overflow-y-auto">
+      <div className="flex min-w-0 flex-1 flex-col xl:overflow-hidden">
+       <div className="flex-1 xl:overflow-y-auto">
         <div className="mx-auto flex w-full max-w-[72rem] flex-1 flex-col gap-5 px-4 py-6 sm:px-6 lg:py-8">
-          <CallHeader call={call} rep={rep} />
+          <CallHeader
+            call={call}
+            rep={rep}
+            action={
+              <CoachingToggle
+                open={coachingOpen}
+                count={comments.length}
+                onToggle={() => setCoachingOpen((v) => !v)}
+              />
+            }
+          />
 
           <div className="flex min-w-0 flex-1 flex-col">
             <div
@@ -127,14 +146,6 @@ export function CallWorkspace({
                   </button>
                 );
               })}
-
-              {/* Below xl the coaching column flows underneath — offer a jump. */}
-              <a
-                href="#coaching"
-                className="ml-auto px-2 py-2.5 text-sm font-medium text-brand-text hover:underline xl:hidden"
-              >
-                Coaching{comments.length > 0 ? ` (${comments.length})` : ""}
-              </a>
             </div>
 
             <div
@@ -184,14 +195,32 @@ export function CallWorkspace({
             </div>
           </div>
         </div>
+       </div>
+
+        {/* Pinned under the review content, deliberately outside the coaching
+            panel — see AskBar. */}
+        <div className="shrink-0 border-t border-border bg-background">
+          <div className="mx-auto w-full max-w-[72rem] px-4 py-3 sm:px-6">
+            <AskBar />
+          </div>
+        </div>
       </div>
 
       {/* The rail. Flush to the right edge and the full height of the viewport
           on xl, bordered like the navigation rail opposite it. Below xl it
-          stacks under the review content with a workable fixed height. */}
+          stacks under the review content with a workable fixed height.
+          Collapsed to zero rather than unmounted, so it slides rather than
+          appearing, and so the thread keeps its scroll position across a
+          close/open. `overflow-hidden` clips the contents while it's shut. */}
       <aside
         id="coaching-rail"
-        className="h-[32rem] min-w-0 border-t border-border xl:h-dvh xl:w-[26rem] xl:shrink-0 xl:border-l xl:border-t-0"
+        aria-hidden={!coachingOpen}
+        className={cn(
+          "min-w-0 overflow-hidden border-border transition-all duration-300 ease-out xl:h-dvh xl:shrink-0",
+          coachingOpen
+            ? "h-[32rem] border-t xl:w-[26rem] xl:border-l xl:border-t-0"
+            : "h-0 border-t-0 xl:w-0 xl:border-l-0",
+        )}
       >
         <CoachingPanel
           callId={call.id}
@@ -206,5 +235,52 @@ export function CallWorkspace({
         />
       </aside>
     </div>
+  );
+}
+
+/**
+ * Opens and closes the coaching rail.
+ *
+ * Carries the message count because the panel is shut on arrival — without it
+ * there is nothing on screen to say a conversation exists at all, and the
+ * whole thread would be one unmarked button away from invisible.
+ */
+function CoachingToggle({
+  open,
+  count,
+  onToggle,
+}: {
+  open: boolean;
+  count: number;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={open}
+      aria-controls="coaching-rail"
+      aria-label={open ? "Hide coaching" : "Show coaching"}
+      title={open ? "Hide coaching" : "Show coaching"}
+      className={cn(
+        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
+        open
+          ? "border-brand-text bg-brand-tint text-brand-text"
+          : "border-border bg-card text-muted-foreground hover:border-border-strong hover:text-foreground",
+      )}
+    >
+      <MessageSquareText className="h-4 w-4" />
+      Coaching
+      {count > 0 && (
+        <span
+          className={cn(
+            "rounded-full px-1.5 text-xs tabular-nums",
+            open ? "bg-brand-text/15" : "bg-secondary",
+          )}
+        >
+          {count}
+        </span>
+      )}
+    </button>
   );
 }

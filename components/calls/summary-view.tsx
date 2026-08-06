@@ -4,7 +4,6 @@ import { Sparkles } from "lucide-react";
 import type { CallRow, CallSummaryRow } from "@/lib/db/types";
 import { RetryButton } from "@/components/calls/retry-button";
 import { RepNotes } from "@/components/calls/rep-notes";
-import { ReviewPanel, ReviewSection } from "@/components/calls/review-section";
 import { IN_PROGRESS_STATUSES } from "@/lib/constants";
 
 /**
@@ -14,6 +13,11 @@ import { IN_PROGRESS_STATUSES } from "@/lib/constants";
  * follow-up, cited evidence and a coaching note. That was too much to read past
  * to find the two things people actually come here for, so the rest is gone —
  * recoverable from git history if any of it is wanted back.
+ *
+ * No card, no divider. The two sections used to sit in one bordered container
+ * split by a hairline, which drew a box around prose that was already the only
+ * thing on the page. Small-caps headers and a wide gap separate them now; the
+ * whitespace does the work the border was doing.
  */
 export function SummaryView({
   call,
@@ -35,42 +39,43 @@ export function SummaryView({
     .join("\n\n");
 
   return (
-    <ReviewPanel>
-      <ReviewSection
-        title="AI summary"
-        icon={<Sparkles className="h-4 w-4 text-brand-text" />}
-      >
-        {summary ? (
-          <p className="whitespace-pre-line text-[15px] leading-relaxed text-foreground/90">
-            {context}
-          </p>
-        ) : call.status === "failed" ? (
-          <div>
-            <p className="text-sm text-muted-foreground">
-              {call.error_message || "Summary generation failed."}
+    <div className="space-y-10">
+      <section>
+        <h3 className="flex items-center gap-2 text-section-label text-muted-foreground">
+          <Sparkles className="h-4 w-4 text-brand-text" />
+          AI summary
+        </h3>
+        <div className="mt-2.5">
+          {summary ? (
+            <p className="whitespace-pre-line text-[15px] leading-relaxed text-foreground/90">
+              {context}
             </p>
-            <div className="mt-3">
-              <RetryButton callId={call.id} />
+          ) : call.status === "failed" ? (
+            <div>
+              <p className="text-sm text-muted-foreground">
+                {call.error_message || "Summary generation failed."}
+              </p>
+              <div className="mt-3">
+                <RetryButton callId={call.id} />
+              </div>
             </div>
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            {inProgress
-              ? "Generating summary… this updates automatically when it's ready."
-              : "The summary is generated automatically once the transcript is ready."}
-          </p>
-        )}
-      </ReviewSection>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {inProgress
+                ? "Generating summary… this updates automatically when it's ready."
+                : "The summary is generated automatically once the transcript is ready."}
+            </p>
+          )}
+        </div>
+      </section>
 
-      {/* RepNotes brings its own heading, so it sits in a plain padded row. */}
-      <div className="p-4 sm:p-5">
-        <RepNotes
-          callId={call.id}
-          initialNotes={notes}
-          canEdit={canEditNotes}
-          repName={repName}
-        />
-      </div>
-    </ReviewPanel>
+      {/* RepNotes brings its own small-caps heading, matching the one above. */}
+      <RepNotes
+        callId={call.id}
+        initialNotes={notes}
+        canEdit={canEditNotes}
+        repName={repName}
+      />
+    </div>
   );
 }
