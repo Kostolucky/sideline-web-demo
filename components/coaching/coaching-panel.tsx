@@ -124,7 +124,7 @@ export function CoachingPanel({
     <section
       id="coaching"
       aria-labelledby="coaching-heading"
-      className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm xl:h-full"
+      className="flex h-full flex-col overflow-hidden bg-card"
     >
       <header className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-3">
         <h2 id="coaching-heading" className="text-sm font-semibold">
@@ -142,7 +142,7 @@ export function CoachingPanel({
         onScroll={onScroll}
         // A minimum height so the column still reads as a conversation when it
         // stacks under the content below xl, where it has no height to fill.
-        className="min-h-[20rem] flex-1 space-y-3 overflow-y-auto px-4 py-4"
+        className="flex-1 space-y-3 overflow-y-auto px-4 py-4"
       >
         {hasThread ? (
           items.map((item) =>

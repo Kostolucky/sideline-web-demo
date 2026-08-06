@@ -22,8 +22,20 @@ function maxWidthFor(pathname: string): string {
   return "max-w-5xl";
 }
 
+/** Call detail owns its own full-bleed layout — see the note below. */
+function isFullBleed(pathname: string): boolean {
+  return /^\/app\/calls\/[^/]+$/.test(pathname);
+}
+
 export function ContentContainer({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+
+  // Call detail opts out entirely. Its coaching column is a full-height rail
+  // flush to the right edge of the viewport, mirroring the navigation rail on
+  // the left — it can't live inside a padded, max-width reading column. The
+  // page re-applies its own padding to the review side.
+  if (isFullBleed(pathname)) return <>{children}</>;
+
   return (
     <div
       className={cn(

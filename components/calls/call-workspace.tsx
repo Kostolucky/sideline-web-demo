@@ -8,10 +8,12 @@ import {
   type AudioPlayerHandle,
 } from "@/components/calls/audio-player";
 import { CoachingPanel } from "@/components/coaching/coaching-panel";
+import { CallHeader } from "@/components/calls/call-header";
 import { cn } from "@/lib/utils";
 import type {
   CallRow,
   CallSummaryRow,
+  OrganizationMemberRow,
   TranscriptUtteranceRow,
 } from "@/lib/db/types";
 import type { CommentWithAuthor } from "@/lib/queries";
@@ -38,6 +40,7 @@ const TABS: { value: Tab; label: string }[] = [
  */
 export function CallWorkspace({
   call,
+  rep,
   summary,
   utterances,
   audioUrl,
@@ -50,6 +53,7 @@ export function CallWorkspace({
   coachingLastReadAt,
 }: {
   call: CallRow;
+  rep: OrganizationMemberRow | null;
   summary: CallSummaryRow | null;
   utterances: TranscriptUtteranceRow[];
   audioUrl: string | null;
@@ -84,104 +88,111 @@ export function CallWorkspace({
   }, []);
 
   return (
-    // ~67% / ~33% — enough for readable transcript lines on the left and a
-    // legible conversation on the right.
+    // Two panes filling the viewport on xl: the review side scrolls, and the
+    // coaching rail runs the full height flush to the right edge — the mirror
+    // of the navigation rail on the left. This route opts out of the shared
+    // reading column (see `ContentContainer`) so the rail can reach the edge;
+    // the review side puts its own padding back.
     //
-    // On xl the grid is a fixed height and each column scrolls inside itself,
-    // so the coaching composer stays pinned in view instead of hanging off the
-    // bottom of a short page. The offset accounts for the page padding and the
-    // call header above. Below xl this unwinds and the page scrolls normally.
-    <div className="grid gap-6 xl:h-[calc(100dvh-11rem)] xl:grid-cols-[2fr_1fr]">
-      <div className="flex min-w-0 flex-col xl:overflow-hidden">
-        <div
-          role="tablist"
-          aria-label="Call review mode"
-          className="flex flex-wrap items-center gap-x-1 border-b border-border"
-        >
-          {TABS.map((t) => {
-            const selected = tab === t.value;
-            return (
-              <button
-                key={t.value}
-                id={`call-tab-${t.value}`}
-                role="tab"
-                aria-selected={selected}
-                aria-controls="call-tabpanel"
-                onClick={() => setTab(t.value)}
-                className={cn(
-                  "-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
-                  selected
-                    ? "border-brand-text text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {t.label}
-              </button>
-            );
-          })}
+    // Below xl it unwinds into a normal stacked page that scrolls.
+    <div className="flex flex-col xl:h-dvh xl:flex-row">
+      <div className="flex min-w-0 flex-1 flex-col xl:overflow-y-auto">
+        <div className="mx-auto flex w-full max-w-[72rem] flex-1 flex-col gap-5 px-4 py-6 sm:px-6 lg:py-8">
+          <CallHeader call={call} rep={rep} />
 
-          {/* Below xl the coaching column flows underneath — offer a jump. */}
-          <a
-            href="#coaching"
-            className="ml-auto px-2 py-2.5 text-sm font-medium text-brand-text hover:underline xl:hidden"
-          >
-            Coaching{comments.length > 0 ? ` (${comments.length})` : ""}
-          </a>
-        </div>
-
-        <div
-          id="call-tabpanel"
-          role="tabpanel"
-          aria-labelledby={`call-tab-${tab}`}
-          // Scrolls independently of the coaching column beside it.
-          className="mt-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1"
-        >
-          {/* Mounted in every tab, shown only in Recording — see the note above. */}
-          {hasAudio && (
+          <div className="flex min-w-0 flex-1 flex-col">
             <div
-              className={cn(
-                tab === "recording"
-                  ? "lg:sticky lg:top-0 lg:z-20 lg:bg-background lg:pb-3 lg:pt-1"
-                  : "hidden",
-              )}
+              role="tablist"
+              aria-label="Call review mode"
+              className="flex flex-wrap items-center gap-x-1 border-b border-border"
             >
-              <AudioPlayer
-                ref={playerRef}
-                audioUrl={audioUrl}
-                mimeType={call.audio_mime_type}
-                durationSeconds={call.duration_seconds ?? 0}
-                onTime={setCurrentMs}
-                onPlayingChange={setPlaying}
-              />
-            </div>
-          )}
+              {TABS.map((t) => {
+                const selected = tab === t.value;
+                return (
+                  <button
+                    key={t.value}
+                    id={`call-tab-${t.value}`}
+                    role="tab"
+                    aria-selected={selected}
+                    aria-controls="call-tabpanel"
+                    onClick={() => setTab(t.value)}
+                    className={cn(
+                      "-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
+                      selected
+                        ? "border-brand-text text-foreground"
+                        : "border-transparent text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
 
-          {tab === "summary" && (
-            <SummaryView
-              call={call}
-              summary={summary}
-              notes={notes}
-              repName={repName}
-              canEditNotes={isTargetRep}
-            />
-          )}
-          {tab === "recording" && (
-            <TranscriptView
-              utterances={utterances}
-              currentMs={currentMs}
-              playing={playing}
-              onSeek={seek}
-              hasAudio={hasAudio}
-            />
-          )}
+              {/* Below xl the coaching column flows underneath — offer a jump. */}
+              <a
+                href="#coaching"
+                className="ml-auto px-2 py-2.5 text-sm font-medium text-brand-text hover:underline xl:hidden"
+              >
+                Coaching{comments.length > 0 ? ` (${comments.length})` : ""}
+              </a>
+            </div>
+
+            <div
+              id="call-tabpanel"
+              role="tabpanel"
+              aria-labelledby={`call-tab-${tab}`}
+              className="mt-4"
+            >
+              {/* Mounted in every tab, shown only in Recording — see above. */}
+              {hasAudio && (
+                <div
+                  className={cn(
+                    tab === "recording"
+                      ? "sticky top-0 z-20 bg-background pb-3 pt-1"
+                      : "hidden",
+                  )}
+                >
+                  <AudioPlayer
+                    ref={playerRef}
+                    audioUrl={audioUrl}
+                    mimeType={call.audio_mime_type}
+                    durationSeconds={call.duration_seconds ?? 0}
+                    onTime={setCurrentMs}
+                    onPlayingChange={setPlaying}
+                  />
+                </div>
+              )}
+
+              {tab === "summary" && (
+                <SummaryView
+                  call={call}
+                  summary={summary}
+                  notes={notes}
+                  repName={repName}
+                  canEditNotes={isTargetRep}
+                />
+              )}
+              {tab === "recording" && (
+                <TranscriptView
+                  utterances={utterances}
+                  currentMs={currentMs}
+                  playing={playing}
+                  onSeek={seek}
+                  hasAudio={hasAudio}
+                />
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* A full-height column, not a stack of cards: the conversation scrolls
-          inside it and the composer stays pinned at the bottom, so the rail
-          behaves like a chat window rather than more page content. Below xl it
-          stacks under the review content and falls back to its own height. */}
-      <aside id="coaching-rail" className="min-w-0 xl:h-full xl:overflow-hidden">
+      {/* The rail. Flush to the right edge and the full height of the viewport
+          on xl, bordered like the navigation rail opposite it. Below xl it
+          stacks under the review content with a workable fixed height. */}
+      <aside
+        id="coaching-rail"
+        className="h-[32rem] min-w-0 border-t border-border xl:h-dvh xl:w-[26rem] xl:shrink-0 xl:border-l xl:border-t-0"
+      >
         <CoachingPanel
           callId={call.id}
           comments={comments}
