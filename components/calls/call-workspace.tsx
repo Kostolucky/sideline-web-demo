@@ -3,25 +3,25 @@
 import * as React from "react";
 import { SummaryView } from "@/components/calls/summary-view";
 import { TranscriptView } from "@/components/calls/transcript-view";
-import { ScorecardView } from "@/components/calls/scorecard-view";
 import {
   AudioPlayer,
   type AudioPlayerHandle,
 } from "@/components/calls/audio-player";
 import { CoachingPanel } from "@/components/coaching/coaching-panel";
 import { cn } from "@/lib/utils";
-import { flags } from "@/lib/flags";
 import type {
   CallRow,
   CallSummaryRow,
   TranscriptUtteranceRow,
 } from "@/lib/db/types";
-import type {
-  CommentWithAuthor,
-  ScorecardCriterionResult,
-} from "@/lib/queries";
+import type { CommentWithAuthor } from "@/lib/queries";
 
-type Tab = "summary" | "recording" | "scorecard";
+type Tab = "summary" | "recording";
+
+const TABS: { value: Tab; label: string }[] = [
+  { value: "summary", label: "Summary" },
+  { value: "recording", label: "Recording" },
+];
 
 /**
  * The call review workspace: review modes on the left, coaching on the right.
@@ -35,8 +35,6 @@ type Tab = "summary" | "recording" | "scorecard";
  * stop playback, and the position stays live, so an Admin can listen, switch
  * tabs, and still attach that moment to a coaching message. Position flows down
  * to the transcript (highlight, auto-scroll) and to the coaching composer.
- *
- * Scorecard is flag-gated off in production; the demo turns it on.
  */
 export function CallWorkspace({
   call,
@@ -50,7 +48,6 @@ export function CallWorkspace({
   canComment,
   isTargetRep,
   coachingLastReadAt,
-  scorecard,
 }: {
   call: CallRow;
   summary: CallSummaryRow | null;
@@ -64,7 +61,6 @@ export function CallWorkspace({
   isTargetRep: boolean;
   /** This viewer's own coaching read watermark for this call. */
   coachingLastReadAt: string | null;
-  scorecard: ScorecardCriterionResult[];
 }) {
   const [tab, setTab] = React.useState<Tab>("summary");
   const [currentMs, setCurrentMs] = React.useState(0);
@@ -74,15 +70,6 @@ export function CallWorkspace({
   // A finished call always has a recording to scrub, whether or not a real audio
   // file has been dropped in — the simulated clock stands in for one.
   const hasAudio = call.status === "ready";
-  const showScorecard = flags.scorecards && scorecard.length > 0;
-
-  const tabs: { value: Tab; label: string }[] = [
-    { value: "summary", label: "Summary" },
-    { value: "recording", label: "Recording" },
-    ...(showScorecard
-      ? [{ value: "scorecard" as const, label: "Scorecard" }]
-      : []),
-  ];
 
   /** Seek within the Recording tab (transcript lines). */
   const seek = React.useCallback((ms: number) => {
@@ -106,7 +93,7 @@ export function CallWorkspace({
           aria-label="Call review mode"
           className="flex flex-wrap items-center gap-x-1 border-b border-border"
         >
-          {tabs.map((t) => {
+          {TABS.map((t) => {
             const selected = tab === t.value;
             return (
               <button
@@ -179,13 +166,6 @@ export function CallWorkspace({
               playing={playing}
               onSeek={seek}
               hasAudio={hasAudio}
-            />
-          )}
-          {tab === "scorecard" && (
-            <ScorecardView
-              callId={call.id}
-              criteria={scorecard}
-              canOverride={canComment}
             />
           )}
         </div>

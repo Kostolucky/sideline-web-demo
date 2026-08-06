@@ -21,7 +21,6 @@ import type {
   OrganizationMemberRow,
   TranscriptUtteranceRow,
 } from "@/lib/db/types";
-import type { ScorecardResult } from "@/lib/scorecards/template";
 import { isUnreadTo } from "@/lib/coaching/unread";
 import { AUDIO_OVERRIDES } from "@/lib/demo/timings";
 import type { DemoState } from "@/lib/demo/store";
@@ -52,18 +51,6 @@ export interface CoachingQueueItem {
 
 export interface CommentWithAuthor extends CommentRow {
   authorName: string;
-}
-
-export interface ScorecardCriterionResult {
-  criterionId: string;
-  evaluationId: string | null;
-  name: string;
-  description: string | null;
-  position: number;
-  result: ScorecardResult | null;
-  explanation: string | null;
-  confidence: number | null;
-  managerOverride: ScorecardResult | null;
 }
 
 export interface TeamWithAssignments {
@@ -212,13 +199,6 @@ export function listCoachingQueue(state: DemoState): CoachingQueueItem[] {
         reason: hasCoaching ? "Awaiting review" : "New conversation",
       };
     });
-}
-
-export function getCallScorecard(
-  state: DemoState,
-  callId: string,
-): ScorecardCriterionResult[] {
-  return state.scorecards[callId] ?? [];
 }
 
 export function listTeamsWithAssignments(

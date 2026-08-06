@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { AudioLines, Mic } from "lucide-react";
+import { AudioLines } from "lucide-react";
 import { SidebarNav } from "@/components/app-shell/sidebar-nav";
 import { MobileNav } from "@/components/app-shell/mobile-nav";
 import { ContentContainer } from "@/components/app-shell/content-container";
-import { RECORD_ITEM } from "@/components/app-shell/nav-items";
 import { IncomingCoaching } from "@/components/demo/incoming-coaching";
 import { Avatar } from "@/components/ui/misc";
 import { roleLabel } from "@/lib/format";
@@ -60,31 +59,19 @@ export default function AppLayout({
 
         <SidebarNav />
 
-        <div className="mt-auto">
-          {/* Prominent record CTA, sitting just above the account button. Solid
-              green, like mobile's new-call FAB. */}
-          <Link
-            href={RECORD_ITEM.href}
-            className="flex items-center justify-center gap-2 rounded-xl bg-brand px-3 py-2.5 text-sm font-semibold text-brand-foreground transition-opacity hover:opacity-90"
-          >
-            <Mic className="h-4 w-4" />
-            Record a call
-          </Link>
-
-          <Link
-            href="/app/account"
-            aria-label="Account"
-            className="mt-3 flex items-center gap-3 rounded-xl border border-border p-2.5 transition-colors hover:border-border-strong hover:bg-secondary"
-          >
-            <Avatar name={member.display_name} email={member.email} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{displayName}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {roleLabel(member.role)}
-              </p>
-            </div>
-          </Link>
-        </div>
+        <Link
+          href="/app/account"
+          aria-label="Account"
+          className="mt-auto flex items-center gap-3 rounded-xl border border-border p-2.5 transition-colors hover:border-border-strong hover:bg-secondary"
+        >
+          <Avatar name={member.display_name} email={member.email} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{displayName}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {roleLabel(member.role)}
+            </p>
+          </div>
+        </Link>
       </aside>
 
       {/* Mobile top bar */}

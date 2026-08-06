@@ -9,7 +9,6 @@ import {
   currentMember,
   getCallComments,
   getCallDetail,
-  getCallScorecard,
   getCoachingReadAt,
 } from "@/lib/queries";
 import Loading from "./loading";
@@ -20,7 +19,6 @@ export function CallScreen({ callId }: { callId: string }) {
   const detail = getCallDetail(state, callId);
   const comments = getCallComments(state, callId);
   const lastReadAt = getCoachingReadAt(state, callId);
-  const scorecard = getCallScorecard(state, callId);
   const me = currentMember(state);
 
   // A rep asking for someone else's call gets the same 404 an unauthorised
@@ -48,7 +46,6 @@ export function CallScreen({ callId }: { callId: string }) {
           canComment={canComment}
           isTargetRep={isTargetRep}
           coachingLastReadAt={lastReadAt}
-          scorecard={scorecard}
         />
       </div>
     </DemoGate>

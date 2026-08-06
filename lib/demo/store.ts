@@ -24,14 +24,13 @@ import type {
   OrganizationRow,
   TranscriptUtteranceRow,
 } from "@/lib/db/types";
-import type { ScorecardCriterionResult, TeamWithAssignments } from "@/lib/queries";
+import type { TeamWithAssignments } from "@/lib/queries";
 import {
-  ADMIN_PERSON_ID,
   CALLS,
+  DEFAULT_PERSONA_ID,
   ORGANIZATION,
   ORGANIZATIONS,
   PEOPLE,
-  SCORECARD_CRITERIA,
   TEAMS,
   atDaysAgo,
   isoDaysAgo,
@@ -55,7 +54,6 @@ export interface DemoState {
   /** `${userId}::${callId}` -> ISO reviewed-at, for the coaching queue. */
   reviews: Record<string, string>;
   teams: TeamWithAssignments[];
-  scorecards: Record<string, ScorecardCriterionResult[]>;
   /** Other workspaces, for the platform-owner console. */
   organizations: DemoOrganizationRow[];
 }
@@ -131,28 +129,10 @@ function buildUtterances(call: DemoCall): TranscriptUtteranceRow[] {
   }));
 }
 
-function buildScorecard(call: DemoCall): ScorecardCriterionResult[] {
-  return SCORECARD_CRITERIA.map((criterion) => {
-    const entry = call.scorecard?.find((e) => e.criterionId === criterion.id);
-    return {
-      criterionId: criterion.id,
-      evaluationId: entry ? `${call.id}-${criterion.id}` : null,
-      name: criterion.name,
-      description: criterion.description,
-      position: criterion.position,
-      result: entry?.result ?? null,
-      explanation: entry?.explanation ?? null,
-      confidence: entry?.confidence ?? null,
-      managerOverride: null,
-    };
-  });
-}
-
 export function buildInitialState(): DemoState {
   const summaries: Record<string, CallSummaryRow> = {};
   const analyses: Record<string, ConversationAnalysisRow> = {};
   const utterances: Record<string, TranscriptUtteranceRow[]> = {};
-  const scorecards: Record<string, ScorecardCriterionResult[]> = {};
   const comments: CommentRow[] = [];
 
   for (const call of CALLS) {
@@ -187,8 +167,6 @@ export function buildInitialState(): DemoState {
       };
     }
 
-    if (call.scorecard) scorecards[call.id] = buildScorecard(call);
-
     for (const c of call.comments) {
       const iso = isoDaysAgo(c.daysAgo, c.hour, c.minute);
       comments.push({
@@ -208,7 +186,7 @@ export function buildInitialState(): DemoState {
   comments.sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
 
   return {
-    personaId: ADMIN_PERSON_ID,
+    personaId: DEFAULT_PERSONA_ID,
     organization: {
       id: ORGANIZATION.id,
       name: ORGANIZATION.name,
@@ -234,7 +212,6 @@ export function buildInitialState(): DemoState {
       memberIds: t.memberIds.map((id) => `member-${id}`),
       managerIds: t.managerIds.map((id) => `member-${id}`),
     })),
-    scorecards,
     organizations: ORGANIZATIONS.map((o) => ({
       ...o,
       createdAt: isoDaysAgo(o.createdDaysAgo, 9, 0),
@@ -421,23 +398,6 @@ export function markCallReviewed(callId: string): void {
     reviews: {
       ...state.reviews,
       [`${state.personaId}::${callId}`]: new Date().toISOString(),
-    },
-  });
-}
-
-export function setScorecardOverride(
-  callId: string,
-  evaluationId: string,
-  override: ScorecardCriterionResult["managerOverride"],
-): void {
-  const existing = state.scorecards[callId];
-  if (!existing) return;
-  update({
-    scorecards: {
-      ...state.scorecards,
-      [callId]: existing.map((c) =>
-        c.evaluationId === evaluationId ? { ...c, managerOverride: override } : c,
-      ),
     },
   });
 }
