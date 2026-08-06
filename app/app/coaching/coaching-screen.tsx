@@ -1,7 +1,5 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { QueueItem } from "@/components/coaching/queue-item";
 import { DemoGate } from "@/components/demo/demo-gate";
@@ -15,28 +13,26 @@ import Loading from "./loading";
  * Flag-gated OFF in production — coaching lives inside a call, and this screen
  * was parked. It is switched on here so the demo can show it; see
  * `lib/flags.ts`.
+ *
+ * Open to everyone. It used to bounce a User back to Calls, which made Coaching
+ * an Admin surface — but `listCoachingQueue` is already scoped to what the
+ * viewer can see, so a rep simply gets their own calls awaiting review. That is
+ * a genuinely useful screen for them, and it is half of what coaching is.
  */
 export function CoachingScreen() {
-  const router = useRouter();
   const state = useDemoState();
   const admin = isAdmin(state);
-
-  React.useEffect(() => {
-    if (!admin) router.replace("/app/calls");
-  }, [admin, router]);
-
-  if (!admin) return <Loading />;
-
   const queue = listCoachingQueue(state);
 
   return (
     <DemoGate fallback={<Loading />}>
       <div className="space-y-5">
         <div>
-          <h1 className="text-xl font-semibold">Coaching queue</h1>
+          <h1 className="text-xl font-semibold">Coaching</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Conversations worth reviewing today. Marking one reviewed clears it
-            from your queue.
+            {admin
+              ? "Conversations worth reviewing today. Marking one reviewed clears it from your queue."
+              : "Your conversations awaiting review. Marking one reviewed clears it from your list."}
           </p>
         </div>
 

@@ -9,7 +9,6 @@ import { RECORD_ITEM } from "@/components/app-shell/nav-items";
 import { IncomingCoaching } from "@/components/demo/incoming-coaching";
 import { Avatar } from "@/components/ui/misc";
 import { roleLabel } from "@/lib/format";
-import { toMemberRole } from "@/lib/constants";
 import { useCurrentMember, useDemoState } from "@/lib/demo/use-demo";
 
 /**
@@ -59,7 +58,7 @@ export default function AppLayout({
           </span>
         </Link>
 
-        <SidebarNav role={toMemberRole(member.role)} />
+        <SidebarNav />
 
         <div className="mt-auto">
           {/* Prominent record CTA, sitting just above the account button. Solid

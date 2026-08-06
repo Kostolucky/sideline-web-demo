@@ -2,16 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { sidebarItemsForRole, isActive } from "./nav-items";
+import { sidebarItems, isActive } from "./nav-items";
 import { cn } from "@/lib/utils";
-import type { MemberRole } from "@/lib/constants";
 
-/** Desktop/tablet left-rail navigation. */
-export function SidebarNav({ role }: { role: MemberRole }) {
+/**
+ * Desktop/tablet left-rail navigation.
+ *
+ * No longer takes a role: every member sees the same destinations, and only the
+ * contents of those screens differ.
+ */
+export function SidebarNav() {
   const pathname = usePathname();
   return (
     <nav className="flex flex-col gap-1">
-      {sidebarItemsForRole(role).map((item) => {
+      {sidebarItems().map((item) => {
         const active = isActive(pathname, item.href);
         const Icon = item.icon;
         return (

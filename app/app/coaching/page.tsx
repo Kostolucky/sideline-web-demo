@@ -4,7 +4,7 @@ import { flags } from "@/lib/flags";
 import Loading from "./loading";
 import { CoachingScreen } from "./coaching-screen";
 
-export const metadata = { title: "Coaching queue · Sideline AI" };
+export const metadata = { title: "Coaching · Sideline AI" };
 
 export default function CoachingPage() {
   // Kept so the flag still governs the route, exactly as in production — the

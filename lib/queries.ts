@@ -43,15 +43,6 @@ export interface CallDetail {
   audioUrl: string | null;
 }
 
-export interface DashboardStats {
-  total: number;
-  ready: number;
-  processing: number;
-  failed: number;
-  last7Days: number;
-  byRep: { rep: OrganizationMemberRow | null; count: number }[];
-}
-
 export interface CoachingQueueItem {
   call: CallRow;
   rep: OrganizationMemberRow | null;
@@ -164,32 +155,6 @@ export function getCallDetail(
     // Null unless a real file has been dropped into public/audio and mapped —
     // the player falls back to a simulated clock, which is the normal case.
     audioUrl: AUDIO_OVERRIDES[callId] ?? null,
-  };
-}
-
-export function getDashboardStats(state: DemoState): DashboardStats {
-  const calls = visibleCalls(state).filter((c) => c.status !== "deleted");
-  const weekAgo = Date.now() - 7 * 86_400_000;
-
-  const counts = new Map<string, number>();
-  for (const c of calls) {
-    counts.set(c.recorded_by, (counts.get(c.recorded_by) ?? 0) + 1);
-  }
-
-  return {
-    total: calls.length,
-    ready: calls.filter((c) => c.status === "ready").length,
-    processing: calls.filter(
-      (c) => c.status !== "ready" && c.status !== "failed",
-    ).length,
-    failed: calls.filter((c) => c.status === "failed").length,
-    last7Days: calls.filter((c) => Date.parse(c.recorded_at) >= weekAgo).length,
-    byRep: Array.from(counts.entries())
-      .map(([userId, count]) => ({
-        rep: memberByUserId(state, userId),
-        count,
-      }))
-      .sort((a, b) => b.count - a.count),
   };
 }
 
