@@ -24,26 +24,31 @@ interface AskMessage {
  * a call's Summary tab. A floating bubble rather than a docked strip, so it
  * hovers over the content instead of being welded to the bottom edge.
  *
+ * Two states. Collapsed it is just the pill. Clicking it opens a card that
+ * grows UPWARD from the pill: the quick actions listed inside, then the
+ * conversation once there is one, with the field staying put at the bottom.
+ * Growing upward matters — the field must not move out from under the cursor
+ * that just clicked it.
+ *
+ * The card is capped and scrolls internally. It sits over the summary and
+ * notes, so it has to stay a panel rather than become the page.
+ *
  * Positioning is the page's job, not the bar's. Each surface wraps it in its
  * own container — pinned in the call's fixed-height column, fixed over the
  * scrolling list — so one component can sit correctly in two different layouts.
  *
- * `reply` is what makes it answer. Given one, the bar is live: send anything
- * and the assistant pauses as if thinking, then writes that reply out word by
- * word, with quick actions offered above. Without one — the call list, where
- * there is no single call to answer about — the same bar renders inert.
+ * `reply` is what makes it answer. Given one, the bar is live: it expands, and
+ * sending writes that reply out word by word. Without one — the call list,
+ * where there is no single call to answer about — the same bar stays a
+ * collapsed, inert pill.
  *
  * SCRIPTED, NOT INTELLIGENT. There is no model. The reveal is deliberate rather
  * than instant: a wall of text appearing at once reads as canned, whereas
  * watching it being written reads as generated. Both delays live in
- * `timings.ts`.
- *
- * The conversation expands upward into a bounded, scrollable area directly
- * above the composer rather than into the page body — the body belongs to the
- * summary, and a Q&A growing inside it would push the call you are reading off
- * the screen. Nothing is persisted; it resets when you leave.
+ * `timings.ts`. Nothing is persisted; it resets when you leave.
  */
 export function AskBar({ reply }: { reply?: string }) {
+  const [expanded, setExpanded] = React.useState(false);
   const [messages, setMessages] = React.useState<AskMessage[]>([]);
   const [draft, setDraft] = React.useState("");
   /** True from the moment a message is sent until the last word lands. */
@@ -51,6 +56,7 @@ export function AskBar({ reply }: { reply?: string }) {
   /** The assistant has started writing — the "Generating…" line gives way. */
   const [streaming, setStreaming] = React.useState(false);
 
+  const inputRef = React.useRef<HTMLInputElement>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const timers = React.useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -120,88 +126,134 @@ export function AskBar({ reply }: { reply?: string }) {
 
   const hasConversation = messages.length > 0;
 
+  function open() {
+    if (!reply) return;
+    setExpanded(true);
+    // Let the card paint before moving focus into it.
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }
+
+  /** Clicking away from an untouched panel closes it again. */
+  function onBlur() {
+    if (!hasConversation && !draft.trim() && !generating) setExpanded(false);
+  }
+
+  // Collapsed: the pill on its own. This is the only state the call list has.
+  if (!expanded) {
+    return (
+      <button
+        type="button"
+        onClick={open}
+        aria-expanded={false}
+        aria-label={reply ? "Ask a question about this call" : "Ask anything"}
+        className="flex w-full items-center gap-2.5 rounded-full border border-border bg-card px-4 py-2.5 text-left shadow-lg transition-colors hover:border-border-strong"
+      >
+        <Sparkles className="h-4 w-4 shrink-0 text-brand-text" />
+        <span className="flex-1 truncate text-sm text-muted-foreground">
+          {reply ? "Ask a question about this call…" : "Ask anything"}
+        </span>
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary">
+          <Mic className="h-4 w-4 text-muted-foreground" />
+        </span>
+      </button>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-2">
-      {hasConversation && (
-        <div
-          ref={scrollRef}
-          className="max-h-[38vh] space-y-3 overflow-y-auto rounded-2xl border border-border bg-card p-3 shadow-lg"
-        >
-          {messages.map((m) =>
-            m.role === "user" ? (
-              <div key={m.id} className="flex justify-end">
-                <p className="max-w-[80%] rounded-2xl rounded-br-sm bg-brand-tint px-3 py-2 text-sm">
+    // Capped so the panel stays a panel. `flex-col` with a scrolling body keeps
+    // the field pinned to the bottom edge however tall the content gets.
+    <div className="flex max-h-[26rem] w-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto p-3">
+        {hasConversation ? (
+          <div className="space-y-3">
+            {messages.map((m) =>
+              m.role === "user" ? (
+                <div key={m.id} className="flex justify-end">
+                  <p className="max-w-[80%] rounded-2xl rounded-br-sm bg-brand-tint px-3 py-2 text-sm">
+                    {m.text}
+                  </p>
+                </div>
+              ) : (
+                // Long-form writing meant to be read and copied, so it is plain
+                // text rather than a bubble.
+                <p
+                  key={m.id}
+                  className="whitespace-pre-line text-sm leading-relaxed text-foreground/90"
+                >
                   {m.text}
                 </p>
-              </div>
-            ) : (
-              // Long-form writing meant to be read and copied, so it is plain
-              // text rather than a bubble.
-              <p
-                key={m.id}
-                className="whitespace-pre-line text-sm leading-relaxed text-foreground/90"
-              >
-                {m.text}
-              </p>
-            ),
-          )}
-          {generating && !streaming && (
-            <p className="text-sm italic text-muted-foreground">Generating…</p>
-          )}
-        </div>
-      )}
-
-      {/* The prompts have served their purpose once the thread has started. */}
-      {reply && !hasConversation && (
-        <div className="flex flex-wrap gap-2">
-          {QUICK_ACTIONS.map((label) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => send(label)}
-              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground"
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
+              ),
+            )}
+            {generating && !streaming && (
+              <p className="text-sm italic text-muted-foreground">Generating…</p>
+            )}
+          </div>
+        ) : (
+          // Listed as rows, not chips: they read as things you can ask for
+          // rather than filters, and they leave the field the only input.
+          <ul className="space-y-0.5">
+            {QUICK_ACTIONS.map((label) => (
+              <li key={label}>
+                <button
+                  type="button"
+                  // `onMouseDown` so the action fires before the field's blur
+                  // closes the panel out from under the click.
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    send(label);
+                  }}
+                  className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-secondary"
+                >
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-border">
+                    <Sparkles className="h-3 w-3 text-brand-text" />
+                  </span>
+                  {label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <form
         onSubmit={(e) => {
           e.preventDefault();
           send(draft);
         }}
-        className="flex w-full items-center gap-2.5 rounded-full border border-border bg-card px-4 py-2 shadow-lg transition-colors focus-within:border-brand-text hover:border-border-strong"
+        className="shrink-0 border-t border-border p-2"
       >
-        <Sparkles className="h-4 w-4 shrink-0 text-brand-text" />
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          disabled={generating || !reply}
-          placeholder={
-            reply ? "Ask a question about this call…" : "Ask anything"
-          }
-          aria-label={reply ? "Ask a question about this call" : "Ask anything"}
-          className="min-w-0 flex-1 bg-transparent py-0.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-default disabled:opacity-100"
-        />
-        {draft.trim() ? (
-          <button
-            type="submit"
+        <div className="flex items-center gap-2.5 rounded-full border border-brand-text bg-card px-4 py-2 ring-2 ring-brand-text/20">
+          <Sparkles className="h-4 w-4 shrink-0 text-brand-text" />
+          <input
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={onBlur}
             disabled={generating}
-            aria-label="Send"
-            className={cn(
-              "flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors",
-              generating
-                ? "bg-secondary text-muted-foreground"
-                : "border border-brand-text bg-brand text-brand-foreground",
-            )}
-          >
-            <ArrowUp className="h-3.5 w-3.5" />
-          </button>
-        ) : (
-          <Mic className="h-4 w-4 shrink-0 text-muted-foreground" />
-        )}
+            placeholder="Ask anything"
+            aria-label="Ask anything about this call"
+            className="min-w-0 flex-1 bg-transparent py-0.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-60"
+          />
+          {draft.trim() ? (
+            <button
+              type="submit"
+              disabled={generating}
+              aria-label="Send"
+              className={cn(
+                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors",
+                generating
+                  ? "bg-secondary text-muted-foreground"
+                  : "border border-brand-text bg-brand text-brand-foreground",
+              )}
+            >
+              <ArrowUp className="h-3.5 w-3.5" />
+            </button>
+          ) : (
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary">
+              <Mic className="h-3.5 w-3.5 text-muted-foreground" />
+            </span>
+          )}
+        </div>
       </form>
     </div>
   );
