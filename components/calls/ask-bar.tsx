@@ -20,26 +20,30 @@ interface AskMessage {
 }
 
 /**
- * "Ask about this call", pinned under the review content.
+ * The ask bar — one component, both surfaces that carry it: the call list and
+ * a call's Summary tab. A floating bubble rather than a docked strip, so it
+ * hovers over the content instead of being welded to the bottom edge.
  *
- * SCRIPTED, NOT INTELLIGENT. There is no model here. Whatever you send, the
- * assistant pauses as if thinking and then writes out the follow-up for this
- * call, word by word — the same behaviour as the mobile app's "Chat with note",
- * driven by the same authored draft, so the two clients answer alike.
+ * Positioning is the page's job, not the bar's. Each surface wraps it in its
+ * own container — pinned in the call's fixed-height column, fixed over the
+ * scrolling list — so one component can sit correctly in two different layouts.
  *
- * The reveal is deliberate rather than instant: a wall of text appearing at
- * once reads as canned, whereas watching it being written reads as generated.
- * Both delays live in `timings.ts`.
+ * `reply` is what makes it answer. Given one, the bar is live: send anything
+ * and the assistant pauses as if thinking, then writes that reply out word by
+ * word, with quick actions offered above. Without one — the call list, where
+ * there is no single call to answer about — the same bar renders inert.
+ *
+ * SCRIPTED, NOT INTELLIGENT. There is no model. The reveal is deliberate rather
+ * than instant: a wall of text appearing at once reads as canned, whereas
+ * watching it being written reads as generated. Both delays live in
+ * `timings.ts`.
  *
  * The conversation expands upward into a bounded, scrollable area directly
- * above the composer rather than into the page body. The body belongs to the
- * summary and transcript; a Q&A thread growing inside it would push the call
- * you are reading off the screen.
- *
- * Nothing is persisted — the thread is local to this component and resets when
- * you leave the call or switch tabs.
+ * above the composer rather than into the page body — the body belongs to the
+ * summary, and a Q&A growing inside it would push the call you are reading off
+ * the screen. Nothing is persisted; it resets when you leave.
  */
-export function AskBar({ reply }: { reply: string }) {
+export function AskBar({ reply }: { reply?: string }) {
   const [messages, setMessages] = React.useState<AskMessage[]>([]);
   const [draft, setDraft] = React.useState("");
   /** True from the moment a message is sent until the last word lands. */
@@ -67,7 +71,7 @@ export function AskBar({ reply }: { reply: string }) {
   const send = React.useCallback(
     (body: string) => {
       const text = body.trim();
-      if (!text || generating) return;
+      if (!text || generating || !reply) return;
 
       const stamp = Date.now();
       setMessages((prev) => [...prev, { id: `u-${stamp}`, role: "user", text }]);
@@ -121,7 +125,7 @@ export function AskBar({ reply }: { reply: string }) {
       {hasConversation && (
         <div
           ref={scrollRef}
-          className="max-h-[38vh] space-y-3 overflow-y-auto rounded-xl border border-border bg-card p-3"
+          className="max-h-[38vh] space-y-3 overflow-y-auto rounded-2xl border border-border bg-card p-3 shadow-lg"
         >
           {messages.map((m) =>
             m.role === "user" ? (
@@ -148,7 +152,7 @@ export function AskBar({ reply }: { reply: string }) {
       )}
 
       {/* The prompts have served their purpose once the thread has started. */}
-      {!hasConversation && (
+      {reply && !hasConversation && (
         <div className="flex flex-wrap gap-2">
           {QUICK_ACTIONS.map((label) => (
             <button
@@ -168,16 +172,18 @@ export function AskBar({ reply }: { reply: string }) {
           e.preventDefault();
           send(draft);
         }}
-        className="flex w-full items-center gap-2.5 rounded-full border border-input bg-card px-4 py-2 transition-colors focus-within:border-brand-text hover:border-muted-foreground"
+        className="flex w-full items-center gap-2.5 rounded-full border border-border bg-card px-4 py-2 shadow-lg transition-colors focus-within:border-brand-text hover:border-border-strong"
       >
         <Sparkles className="h-4 w-4 shrink-0 text-brand-text" />
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          disabled={generating}
-          placeholder="Ask a question about this call…"
-          aria-label="Ask a question about this call"
-          className="min-w-0 flex-1 bg-transparent py-0.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-60"
+          disabled={generating || !reply}
+          placeholder={
+            reply ? "Ask a question about this call…" : "Ask anything"
+          }
+          aria-label={reply ? "Ask a question about this call" : "Ask anything"}
+          className="min-w-0 flex-1 bg-transparent py-0.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-default disabled:opacity-100"
         />
         {draft.trim() ? (
           <button

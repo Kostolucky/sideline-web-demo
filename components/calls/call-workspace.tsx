@@ -206,8 +206,8 @@ export function CallWorkspace({
             is the thing being worked, and a second composer under the player
             competes with it. */}
         {tab === "summary" && (
-          <div className="shrink-0 border-t border-border bg-background">
-            <div className="mx-auto w-full max-w-[72rem] px-4 py-3 sm:px-6">
+          <div className="shrink-0 bg-background">
+            <div className="mx-auto w-full max-w-[72rem] px-4 pb-4 pt-2 sm:px-6">
               <AskBar reply={followUpReply(analysis, summary)} />
             </div>
           </div>

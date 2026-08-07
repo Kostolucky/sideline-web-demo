@@ -8,6 +8,7 @@ import {
   type MemberOption,
 } from "@/components/calls/calls-filters";
 import { DemoGate } from "@/components/demo/demo-gate";
+import { AskBar } from "@/components/calls/ask-bar";
 import { buttonVariants } from "@/components/ui/button";
 import { useDemoState } from "@/lib/demo/use-demo";
 import { getUnreadCoachingByCall, listCalls, listMembers } from "@/lib/queries";
@@ -103,6 +104,18 @@ export function CallsScreen() {
               ) : undefined
             }
           />
+        </div>
+
+        {/* The same bar as a call's Summary tab, floating over the list.
+            No `reply`: there is no single call to answer about here, so it is
+            inert — the surface exists, the answering does not. Positioning
+            lives here rather than in the component, since the two surfaces sit
+            in very different layouts. Raised above the mobile bottom nav and
+            offset past the sidebar on desktop. */}
+        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-30 px-4 lg:bottom-6 lg:left-64">
+          <div className="pointer-events-auto mx-auto w-full max-w-2xl">
+            <AskBar />
+          </div>
         </div>
       </div>
     </DemoGate>
