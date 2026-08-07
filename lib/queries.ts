@@ -42,13 +42,6 @@ export interface CallDetail {
   audioUrl: string | null;
 }
 
-export interface CoachingQueueItem {
-  call: CallRow;
-  rep: OrganizationMemberRow | null;
-  summarySnippet: string | null;
-  reason: string;
-}
-
 export interface CommentWithAuthor extends CommentRow {
   authorName: string;
 }
@@ -182,23 +175,6 @@ export function getUnreadCoachingByCall(
     }
   }
   return out;
-}
-
-export function listCoachingQueue(state: DemoState): CoachingQueueItem[] {
-  return visibleCalls(state)
-    .filter((c) => c.status === "ready")
-    .filter((c) => !state.reviews[`${state.personaId}::${c.id}`])
-    .sort((a, b) => Date.parse(b.recorded_at) - Date.parse(a.recorded_at))
-    .map((call) => {
-      const summary = state.summaries[call.id];
-      const hasCoaching = state.comments.some((c) => c.call_id === call.id);
-      return {
-        call,
-        rep: memberByUserId(state, call.recorded_by),
-        summarySnippet: summary?.summary ?? null,
-        reason: hasCoaching ? "Awaiting review" : "New conversation",
-      };
-    });
 }
 
 export function listTeamsWithAssignments(

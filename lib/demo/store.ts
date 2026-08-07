@@ -51,8 +51,6 @@ export interface DemoState {
   comments: CommentRow[];
   /** `${userId}::${callId}` -> ISO read watermark. Per-person, like production. */
   coachingReads: Record<string, string>;
-  /** `${userId}::${callId}` -> ISO reviewed-at, for the coaching queue. */
-  reviews: Record<string, string>;
   teams: TeamWithAssignments[];
   /** Other workspaces, for the platform-owner console. */
   organizations: DemoOrganizationRow[];
@@ -205,7 +203,6 @@ export function buildInitialState(): DemoState {
     // Everyone has read everything up to two days ago, so a handful of recent
     // messages start unread and the badges are visible on first load.
     coachingReads: seedReads(),
-    reviews: {},
     teams: TEAMS.map((t) => ({
       id: t.id,
       name: t.name,
@@ -389,15 +386,6 @@ export function markCoachingRead(callId: string, upTo: string): void {
     coachingReads: {
       ...state.coachingReads,
       [`${state.personaId}::${callId}`]: upTo,
-    },
-  });
-}
-
-export function markCallReviewed(callId: string): void {
-  update({
-    reviews: {
-      ...state.reviews,
-      [`${state.personaId}::${callId}`]: new Date().toISOString(),
     },
   });
 }
