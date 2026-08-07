@@ -49,6 +49,63 @@ export function followUpReply(
   return "There isn't a summary on this call yet, so there's nothing for me to base a follow-up on. Once it finishes processing I can draft one.";
 }
 
+export interface FollowUpCall {
+  id: string;
+  name: string;
+  /** ISO. */
+  recordedAt: string;
+  repName: string;
+  /** The first next step from the call's summary, if it has one. */
+  nextStep?: string;
+}
+
+function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+/**
+ * What the assistant answers on the call list: what still needs doing from
+ * today's calls.
+ *
+ * Derived rather than hardcoded, so it cannot drift from what is on screen
+ * above it. Each item is the call's own first next step — the same line the
+ * summary shows — so the answer is checkable against the call it names.
+ *
+ * `now` is injectable for tests.
+ */
+export function todaysFollowUpsReply(
+  calls: FollowUpCall[],
+  now: Date = new Date(),
+): string {
+  const today = calls.filter((c) => isSameDay(new Date(c.recordedAt), now));
+
+  if (today.length === 0) {
+    return "Nothing from today needs a follow-up — there are no calls recorded today yet.";
+  }
+
+  const lines = today.map((c) => {
+    const step = c.nextStep?.trim();
+    return step
+      ? `• ${c.name} · ${c.repName}\n  ${step}`
+      : `• ${c.name} · ${c.repName}\n  No next step captured yet — worth a listen.`;
+  });
+
+  const count =
+    today.length === 1 ? "1 follow-up" : `${today.length} follow-ups`;
+
+  return [
+    `You have ${count} from today's calls.`,
+    "",
+    ...lines,
+    "",
+    "That's everything from today.",
+  ].join("\n");
+}
+
 /**
  * Split text for word-by-word reveal.
  *

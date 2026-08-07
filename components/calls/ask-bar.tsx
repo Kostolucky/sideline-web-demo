@@ -6,8 +6,8 @@ import { TIMINGS } from "@/lib/demo/timings";
 import { tokenize } from "@/lib/calls/ask-reply";
 import { cn } from "@/lib/utils";
 
-/** Static quick actions. Each one sends its label. */
-const QUICK_ACTIONS = [
+/** Quick actions for a single call. Each one sends its label. */
+const CALL_ACTIONS = [
   "Write follow-up email",
   "Summarize objections",
   "Draft next steps",
@@ -47,7 +47,17 @@ interface AskMessage {
  * watching it being written reads as generated. Both delays live in
  * `timings.ts`. Nothing is persisted; it resets when you leave.
  */
-export function AskBar({ reply }: { reply?: string }) {
+export function AskBar({
+  reply,
+  placeholder = "Ask a question about this call…",
+  actions = CALL_ACTIONS,
+}: {
+  reply?: string;
+  /** Collapsed prompt. The list asks about everything, not one call. */
+  placeholder?: string;
+  /** Suggested asks. Must suit whatever `reply` answers.  */
+  actions?: string[];
+}) {
   const [expanded, setExpanded] = React.useState(false);
   const [messages, setMessages] = React.useState<AskMessage[]>([]);
   const [draft, setDraft] = React.useState("");
@@ -145,12 +155,12 @@ export function AskBar({ reply }: { reply?: string }) {
         type="button"
         onClick={open}
         aria-expanded={false}
-        aria-label={reply ? "Ask a question about this call" : "Ask anything"}
+        aria-label={placeholder}
         className="flex w-full items-center gap-2.5 rounded-full border border-border bg-card px-4 py-2.5 text-left shadow-lg transition-colors hover:border-border-strong"
       >
         <Sparkles className="h-4 w-4 shrink-0 text-brand-text" />
         <span className="flex-1 truncate text-sm text-muted-foreground">
-          {reply ? "Ask a question about this call…" : "Ask anything"}
+          {placeholder}
         </span>
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary">
           <Mic className="h-4 w-4 text-muted-foreground" />
@@ -178,7 +188,7 @@ export function AskBar({ reply }: { reply?: string }) {
                 // text rather than a bubble.
                 <p
                   key={m.id}
-                  className="whitespace-pre-line text-sm leading-relaxed text-foreground/90"
+                  className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90"
                 >
                   {m.text}
                 </p>
@@ -192,7 +202,7 @@ export function AskBar({ reply }: { reply?: string }) {
           // Listed as rows, not chips: they read as things you can ask for
           // rather than filters, and they leave the field the only input.
           <ul className="space-y-0.5">
-            {QUICK_ACTIONS.map((label) => (
+            {actions.map((label) => (
               <li key={label}>
                 <button
                   type="button"
@@ -230,8 +240,8 @@ export function AskBar({ reply }: { reply?: string }) {
             onChange={(e) => setDraft(e.target.value)}
             onBlur={onBlur}
             disabled={generating}
-            placeholder="Ask anything"
-            aria-label="Ask anything about this call"
+            placeholder={placeholder}
+            aria-label={placeholder}
             className="min-w-0 flex-1 bg-transparent py-0.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-60"
           />
           {draft.trim() ? (
