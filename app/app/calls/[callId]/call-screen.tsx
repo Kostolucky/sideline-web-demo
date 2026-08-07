@@ -30,7 +30,7 @@ export function CallScreen({ callId }: { callId: string }) {
   // read produces in production — the scoping lives in `getCallDetail`.
   if (!detail) notFound();
 
-  const { call, rep, utterances, summary, audioUrl } = detail;
+  const { call, rep, utterances, summary, analysis, audioUrl } = detail;
   const canComment = me.role === "admin";
   const isTargetRep = call.recorded_by === state.personaId;
 
@@ -46,6 +46,7 @@ export function CallScreen({ callId }: { callId: string }) {
         call={call}
         rep={rep}
         summary={summary}
+        analysis={analysis}
         utterances={utterances}
         audioUrl={audioUrl}
         comments={comments}

@@ -23,6 +23,18 @@ export const TIMINGS = {
    * shown, so an unread badge visibly appears during a demo rather than being
    * there from the start. Set `enabled: false` to switch the surprise off.
    */
+  /**
+   * The ask bar on call detail — how long the assistant appears to think
+   * before the first word, and how fast the reply then streams in.
+   *
+   * `tokenMs` is per token, and whitespace counts as a token, so a word lands
+   * roughly every 2× this. Matches the mobile app's chat.
+   */
+  chat: {
+    thinkingMs: 900,
+    tokenMs: 26,
+  },
+
   incomingCoaching: {
     enabled: true,
     afterMs: 20_000,

@@ -12,9 +12,11 @@ import { CallHeader } from "@/components/calls/call-header";
 import { AskBar } from "@/components/calls/ask-bar";
 import { MessageSquareText } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { followUpReply } from "@/lib/calls/ask-reply";
 import type {
   CallRow,
   CallSummaryRow,
+  ConversationAnalysisRow,
   OrganizationMemberRow,
   TranscriptUtteranceRow,
 } from "@/lib/db/types";
@@ -44,6 +46,7 @@ export function CallWorkspace({
   call,
   rep,
   summary,
+  analysis,
   utterances,
   audioUrl,
   comments,
@@ -57,6 +60,7 @@ export function CallWorkspace({
   call: CallRow;
   rep: OrganizationMemberRow | null;
   summary: CallSummaryRow | null;
+  analysis: ConversationAnalysisRow | null;
   utterances: TranscriptUtteranceRow[];
   audioUrl: string | null;
   comments: CommentWithAuthor[];
@@ -198,12 +202,16 @@ export function CallWorkspace({
        </div>
 
         {/* Pinned under the review content, deliberately outside the coaching
-            panel — see AskBar. */}
-        <div className="shrink-0 border-t border-border bg-background">
-          <div className="mx-auto w-full max-w-[72rem] px-4 py-3 sm:px-6">
-            <AskBar />
+            panel — see AskBar. Summary only: on the Recording tab the transcript
+            is the thing being worked, and a second composer under the player
+            competes with it. */}
+        {tab === "summary" && (
+          <div className="shrink-0 border-t border-border bg-background">
+            <div className="mx-auto w-full max-w-[72rem] px-4 py-3 sm:px-6">
+              <AskBar reply={followUpReply(analysis, summary)} />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* The rail. Flush to the right edge and the full height of the viewport
