@@ -5,7 +5,6 @@ import { AudioLines } from "lucide-react";
 import { SidebarNav } from "@/components/app-shell/sidebar-nav";
 import { MobileNav } from "@/components/app-shell/mobile-nav";
 import { ContentContainer } from "@/components/app-shell/content-container";
-import { IncomingCoaching } from "@/components/demo/incoming-coaching";
 import { Avatar } from "@/components/ui/misc";
 import { roleLabel } from "@/lib/format";
 import { useCurrentMember, useDemoState } from "@/lib/demo/use-demo";
@@ -34,9 +33,6 @@ export default function AppLayout({
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[16rem_1fr]">
-      {/* Fires the scripted "a coaching message just arrived" moment. */}
-      <IncomingCoaching />
-
       {/* Desktop sidebar */}
       {/* `sidebar-surface` re-scopes the colour tokens to their dark values for
           this subtree (see globals.css), so the charcoal rail keeps mobile's

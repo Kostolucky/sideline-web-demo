@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { MessageSquareText } from "lucide-react";
 import type { CallWithRep } from "@/lib/queries";
 import { Avatar } from "@/components/ui/misc";
 import {
@@ -32,14 +31,11 @@ const COLS =
  */
 export function CallsList({
   calls,
-  unreadCoaching,
   emptyTitle,
   emptyDescription,
   emptyAction,
 }: {
   calls: CallWithRep[];
-  /** call id -> unread coaching for the signed-in person. */
-  unreadCoaching?: Record<string, number>;
   emptyTitle: string;
   emptyDescription: string;
   emptyAction?: React.ReactNode;
@@ -86,20 +82,6 @@ export function CallsList({
                       attention or is still in flight. */}
                   {isNoteworthyStatus(call.status) && (
                     <CallStatusBadge status={call.status} />
-                  )}
-                  {/* Unread coaching for whoever is signed in — same column as
-                      the title so it reads as belonging to this call. */}
-                  {(unreadCoaching?.[call.id] ?? 0) > 0 && (
-                    <span
-                      className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-tint px-2 py-0.5 text-xs font-medium text-brand-text"
-                      title={`${unreadCoaching![call.id]} unread coaching ${
-                        unreadCoaching![call.id] === 1 ? "message" : "messages"
-                      }`}
-                    >
-                      <MessageSquareText aria-hidden className="h-3 w-3" />
-                      {unreadCoaching![call.id]}
-                      <span className="sr-only"> unread coaching</span>
-                    </span>
                   )}
                 </span>
 

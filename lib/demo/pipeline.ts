@@ -61,7 +61,6 @@ function freshRows(callId: string): {
         primary_improvement: c.insights.primaryImprovement,
         objections: c.insights.objections,
         next_steps: c.insights.nextSteps,
-        coaching_note: c.insights.coachingNote,
         customer_follow_up_draft: c.insights.customerFollowUpDraft,
       },
       created_at: now,

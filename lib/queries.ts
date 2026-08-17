@@ -16,12 +16,10 @@
 import type {
   CallRow,
   CallSummaryRow,
-  CommentRow,
   ConversationAnalysisRow,
   OrganizationMemberRow,
   TranscriptUtteranceRow,
 } from "@/lib/db/types";
-import { isUnreadTo } from "@/lib/coaching/unread";
 import { AUDIO_OVERRIDES } from "@/lib/demo/timings";
 import type { DemoState } from "@/lib/demo/store";
 
@@ -40,10 +38,6 @@ export interface CallDetail {
   summary: CallSummaryRow | null;
   analysis: ConversationAnalysisRow | null;
   audioUrl: string | null;
-}
-
-export interface CommentWithAuthor extends CommentRow {
-  authorName: string;
 }
 
 export interface TeamWithAssignments {
@@ -136,45 +130,6 @@ export function getCallDetail(
     // the player falls back to a simulated clock, which is the normal case.
     audioUrl: AUDIO_OVERRIDES[callId] ?? null,
   };
-}
-
-function authorName(state: DemoState, userId: string): string {
-  const member = memberByUserId(state, userId);
-  return member?.display_name || member?.email || "Unknown";
-}
-
-export function getCallComments(
-  state: DemoState,
-  callId: string,
-): CommentWithAuthor[] {
-  return state.comments
-    .filter((c) => c.call_id === callId)
-    .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at))
-    .map((c) => ({ ...c, authorName: authorName(state, c.author_user_id) }));
-}
-
-export function getCoachingReadAt(
-  state: DemoState,
-  callId: string,
-): string | null {
-  return state.coachingReads[`${state.personaId}::${callId}`] ?? null;
-}
-
-/** call id -> unread coaching count for the current persona. */
-export function getUnreadCoachingByCall(
-  state: DemoState,
-): Record<string, number> {
-  const out: Record<string, number> = {};
-  const visible = new Set(visibleCalls(state).map((c) => c.id));
-
-  for (const comment of state.comments) {
-    if (!visible.has(comment.call_id)) continue;
-    const lastRead = state.coachingReads[`${state.personaId}::${comment.call_id}`] ?? null;
-    if (isUnreadTo(comment, state.personaId, lastRead)) {
-      out[comment.call_id] = (out[comment.call_id] ?? 0) + 1;
-    }
-  }
-  return out;
 }
 
 export function listTeamsWithAssignments(

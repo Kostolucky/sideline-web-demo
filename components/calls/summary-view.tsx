@@ -10,9 +10,9 @@ import { IN_PROGRESS_STATUSES } from "@/lib/constants";
  * The Summary tab: the AI account of the call, then the rep's notes. Nothing else.
  *
  * It previously also carried next steps, focus/strengths/objections, a drafted
- * follow-up, cited evidence and a coaching note. That was too much to read past
- * to find the two things people actually come here for, so the rest is gone —
- * recoverable from git history if any of it is wanted back.
+ * follow-up and cited evidence. That was too much to read past to find the two
+ * things people actually come here for, so the rest is gone — recoverable from
+ * git history if any of it is wanted back.
  *
  * No card, no divider. The two sections used to sit in one bordered container
  * split by a hairline, which drew a box around prose that was already the only

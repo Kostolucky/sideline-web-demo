@@ -12,8 +12,8 @@ import { saveNotesAction } from "@/lib/calls/actions";
  *
  * Editable at any time, not just during the recording: you can come back days
  * later and add to them. Only the rep who recorded the call can edit (the API
- * enforces it); an Admin reading someone else's call sees them read-only,
- * because manager input belongs in coaching.
+ * enforces it); an Admin reading someone else's call sees them read-only —
+ * these are the rep's own notes, not a shared scratchpad.
  */
 export function RepNotes({
   callId,

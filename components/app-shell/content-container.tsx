@@ -30,10 +30,10 @@ function isFullBleed(pathname: string): boolean {
 export function ContentContainer({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // Call detail opts out entirely. Its coaching column is a full-height rail
-  // flush to the right edge of the viewport, mirroring the navigation rail on
-  // the left — it can't live inside a padded, max-width reading column. The
-  // page re-applies its own padding to the review side.
+  // Call detail opts out entirely: it runs the full height of the viewport so
+  // the review content scrolls under a pinned ask bar, which can't happen
+  // inside a padded, max-width reading column. The page re-applies its own
+  // padding.
   if (isFullBleed(pathname)) return <>{children}</>;
 
   return (

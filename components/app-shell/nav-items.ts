@@ -19,9 +19,8 @@ export interface NavItem {
  * workspace totals are not what anyone opens this app to do. Record, as a
  * prominent primary action: recording happens on the phone, so a record button
  * on the web pointed at the wrong device. And Coaching, which was a queue of
- * calls awaiting review — a second list of the same objects, one click from the
- * list you are already on. Coaching itself is unchanged; it lives inside a call,
- * beside the transcript it is about.
+ * calls awaiting review — coaching has been taken out of the product entirely
+ * and happens in the conversations managers were already having.
  *
  * A call is the atomic unit here. Every destination that was really "calls,
  * filtered differently" has been folded back into Calls.

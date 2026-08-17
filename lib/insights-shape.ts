@@ -10,7 +10,6 @@ export interface Insights {
   primary_improvement?: { area?: string; suggestion?: string };
   objections?: string[];
   next_steps?: string[];
-  coaching_note?: string;
   customer_follow_up_draft?: string;
 }
 
