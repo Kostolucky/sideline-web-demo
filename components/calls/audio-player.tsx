@@ -22,7 +22,7 @@ export interface AudioPlayerHandle {
  * production component: a native `<audio>` element with the same controls. When
  * it is null, which is the normal case for this demo, a simulated clock drives
  * the same position, and the scrubber, timer, transcript highlighting and
- * coaching timestamps all behave exactly as they would with real audio.
+ * transcript timestamps all behave exactly as they would with real audio.
  *
  * Everything downstream reads position through `onTime` and drives it through
  * `seek`, so nothing else in the app knows or cares which mode is running.

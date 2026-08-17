@@ -15,9 +15,8 @@ import { Button } from "@/components/ui/button";
  * This is the one control in the demo that has no production equivalent, and it
  * is deliberately the most useful one: the permission model is a big part of
  * what Sideline sells, and flipping Admin ↔ User live is far more convincing
- * than describing it. Admin sees every call, manages the roster and can open a
- * coaching thread; User sees only their own calls, gets a read-only team list,
- * and can reply to coaching but not start it.
+ * than describing it. Admin sees every call in the workspace and manages the
+ * roster; User sees only the calls they recorded, and a read-only team list.
  *
  * It lives on the Account screen only. It was briefly in the sidebar too, which
  * put a demo control inside the product chrome — the thing a prospect looks at
@@ -81,9 +80,8 @@ export function PersonaSwitcher() {
 
       <p className="text-sm text-muted-foreground">
         You are {roleLabel(current?.role ?? "member")} — {current?.display_name}.
-        An Admin sees every call in the workspace, manages the roster, and can
-        start coaching threads. A User sees only the calls they recorded, gets a
-        read-only team list, and can reply to coaching but not open it.
+        An Admin sees every call in the workspace and manages the roster. A User
+        sees only the calls they recorded, and a read-only team list.
       </p>
 
       <div>

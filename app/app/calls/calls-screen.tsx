@@ -12,7 +12,7 @@ import { AskBar } from "@/components/calls/ask-bar";
 import { todaysFollowUpsReply } from "@/lib/calls/ask-reply";
 import { buttonVariants } from "@/components/ui/button";
 import { useDemoState } from "@/lib/demo/use-demo";
-import { getUnreadCoachingByCall, listCalls, listMembers } from "@/lib/queries";
+import { listCalls, listMembers } from "@/lib/queries";
 import {
   isDateRangeActive,
   parseDateRange,
@@ -37,7 +37,6 @@ export function CallsScreen() {
   // Ordered by `recorded_at` descending, so same-day calls still come back
   // newest first even though the table shows only the date.
   const calls = listCalls(state, { recordedBy: member, search: q, ...bounds });
-  const unreadCoaching = getUnreadCoachingByCall(state);
 
   // Members who could have recorded calls (have signed in at least once).
   const memberOptions: MemberOption[] = members
@@ -90,7 +89,6 @@ export function CallsScreen() {
 
           <CallsList
             calls={calls}
-            unreadCoaching={unreadCoaching}
             // Two distinct messages: an empty workspace and a filter that
             // matched nothing are very different problems.
             emptyTitle={

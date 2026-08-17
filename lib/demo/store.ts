@@ -18,7 +18,6 @@
 import type {
   CallRow,
   CallSummaryRow,
-  CommentRow,
   ConversationAnalysisRow,
   OrganizationMemberRow,
   OrganizationRow,
@@ -48,9 +47,6 @@ export interface DemoState {
   summaries: Record<string, CallSummaryRow>;
   analyses: Record<string, ConversationAnalysisRow>;
   utterances: Record<string, TranscriptUtteranceRow[]>;
-  comments: CommentRow[];
-  /** `${userId}::${callId}` -> ISO read watermark. Per-person, like production. */
-  coachingReads: Record<string, string>;
   teams: TeamWithAssignments[];
   /** Other workspaces, for the platform-owner console. */
   organizations: DemoOrganizationRow[];
@@ -131,7 +127,6 @@ export function buildInitialState(): DemoState {
   const summaries: Record<string, CallSummaryRow> = {};
   const analyses: Record<string, ConversationAnalysisRow> = {};
   const utterances: Record<string, TranscriptUtteranceRow[]> = {};
-  const comments: CommentRow[] = [];
 
   for (const call of CALLS) {
     utterances[call.id] = buildUtterances(call);
@@ -158,30 +153,12 @@ export function buildInitialState(): DemoState {
           primary_improvement: call.insights.primaryImprovement,
           objections: call.insights.objections,
           next_steps: call.insights.nextSteps,
-          coaching_note: call.insights.coachingNote,
           customer_follow_up_draft: call.insights.customerFollowUpDraft,
         },
         created_at: isoDaysAgo(call.daysAgo, call.hour + 1, call.minute),
       };
     }
-
-    for (const c of call.comments) {
-      const iso = isoDaysAgo(c.daysAgo, c.hour, c.minute);
-      comments.push({
-        id: c.id,
-        call_id: call.id,
-        author_user_id: c.authorId,
-        target_rep_user_id: call.repId,
-        body: c.body,
-        timestamp_ms: c.timestampMs,
-        parent_id: c.parentId,
-        created_at: iso,
-        updated_at: iso,
-      });
-    }
   }
-
-  comments.sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
 
   return {
     personaId: DEFAULT_PERSONA_ID,
@@ -199,10 +176,6 @@ export function buildInitialState(): DemoState {
     summaries,
     analyses,
     utterances,
-    comments,
-    // Everyone has read everything up to two days ago, so a handful of recent
-    // messages start unread and the badges are visible on first load.
-    coachingReads: seedReads(),
     teams: TEAMS.map((t) => ({
       id: t.id,
       name: t.name,
@@ -214,24 +187,6 @@ export function buildInitialState(): DemoState {
       createdAt: isoDaysAgo(o.createdDaysAgo, 9, 0),
     })),
   };
-}
-
-/**
- * Seed read watermarks so some coaching starts unread and some doesn't.
- *
- * Both personas get a watermark of "36 hours ago" on every call, which leaves
- * anything written since then unread to whoever didn't write it. That's how the
- * demo has visible badges on first paint without hand-marking individual rows.
- */
-function seedReads(): Record<string, string> {
-  const watermark = new Date(Date.now() - 36 * 3_600_000).toISOString();
-  const reads: Record<string, string> = {};
-  for (const person of PEOPLE) {
-    for (const call of CALLS) {
-      reads[`${person.id}::${call.id}`] = watermark;
-    }
-  }
-  return reads;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -306,88 +261,6 @@ function nextId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random()
     .toString(36)
     .slice(2, 7)}`;
-}
-
-export function addComment(
-  callId: string,
-  body: string,
-  timestampMs: number | null,
-  parentId: string | null = null,
-): CommentRow {
-  const call = state.calls.find((c) => c.id === callId);
-  const iso = new Date().toISOString();
-  const comment: CommentRow = {
-    id: nextId("cm"),
-    call_id: callId,
-    author_user_id: state.personaId,
-    target_rep_user_id: call?.recorded_by ?? state.personaId,
-    body: body.trim(),
-    timestamp_ms: timestampMs,
-    parent_id: parentId,
-    created_at: iso,
-    updated_at: iso,
-  };
-  update({ comments: [...state.comments, comment] });
-  return comment;
-}
-
-/**
- * Inject a message from someone else — used by the scripted "incoming coaching"
- * moment so an unread badge appears live during a demo.
- */
-export function injectIncomingComment(
-  callId: string,
-  authorId: string,
-  body: string,
-  timestampMs: number | null = null,
-): void {
-  const call = state.calls.find((c) => c.id === callId);
-  if (!call) return;
-  const iso = new Date().toISOString();
-  update({
-    comments: [
-      ...state.comments,
-      {
-        id: nextId("cm-incoming"),
-        call_id: callId,
-        author_user_id: authorId,
-        target_rep_user_id: call.recorded_by,
-        body,
-        timestamp_ms: timestampMs,
-        parent_id: null,
-        created_at: iso,
-        updated_at: iso,
-      },
-    ],
-  });
-}
-
-export function updateComment(commentId: string, body: string): void {
-  update({
-    comments: state.comments.map((c) =>
-      c.id === commentId
-        ? { ...c, body: body.trim(), updated_at: new Date().toISOString() }
-        : c,
-    ),
-  });
-}
-
-export function deleteComment(commentId: string): void {
-  update({
-    // Deleting a root takes its replies with it, matching the production cascade.
-    comments: state.comments.filter(
-      (c) => c.id !== commentId && c.parent_id !== commentId,
-    ),
-  });
-}
-
-export function markCoachingRead(callId: string, upTo: string): void {
-  update({
-    coachingReads: {
-      ...state.coachingReads,
-      [`${state.personaId}::${callId}`]: upTo,
-    },
-  });
 }
 
 /* ---- Team ---- */

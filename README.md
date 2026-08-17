@@ -4,6 +4,11 @@ A front-end-only recreation of the Sideline AI web app, for sales demos.
 
 It looks and behaves like the real thing. It is not the real thing.
 
+**The web app is where calls get reviewed**: a manager reads their team's
+recorded conversations, a rep reads their own. Coaching itself happens outside
+the product — in person, on the phone, over text, in a 1:1 — so there is no
+coaching surface here to find.
+
 **No sign-in. No backend. No database. No environment variables. No API keys.**
 Everything on screen comes from `lib/demo/`. Recording, transcription and AI
 analysis are all simulated.
@@ -34,14 +39,14 @@ npm run build
 | Area | Behaviour |
 |---|---|
 | Calls list, filters, search, date ranges | Real, URL-driven. Back button works. |
-| Admin / User roles | Real. Switch personas in the sidebar or on /app/account. |
-| Call review workspace | Real layout: Summary / Recording / Scorecard + coaching rail. |
+| Admin / User roles | Real. Switch personas on /app/account. |
+| Call review workspace | Real layout: Summary / Recording. |
 | Playback | **Simulated.** A clock drives the scrubber and transcript highlighting. |
 | Recording | **Simulated.** No microphone; the phases and progress bar are scripted. |
 | Upload → processing → ready | **Simulated.** ~12s after you finish a recording. |
-| Transcript, summary, insights, scorecards | Real content, hardcoded. Nothing is generated. |
-| Coaching, notes, renames, team edits | Real, stored in memory for the session. |
-| Unread coaching | Real, per-persona watermarks. One message arrives ~20s in. |
+| Transcript, summary, insights | Real content, hardcoded. Nothing is generated. |
+| Notes, renames, team edits | Real, stored in memory for the session. |
+| Ask bar | **Simulated.** The reply is authored content, streamed in. |
 
 State lives in memory. **Reload and the sample data is pristine again** — which
 is what you want between demos. There's also a *Reset demo data* button on
@@ -49,14 +54,9 @@ is what you want between demos. There's also a *Reset demo data* button on
 
 ### Routes
 
-`/app/calls`, `/app/calls/[callId]`, `/app/dashboard` (Admin only),
-`/app/team`, `/app/account`, `/app/record`, `/app/coaching`,
+`/app/calls`, `/app/calls/[callId]`, `/app/team`, `/app/account`,
 `/internal/organizations`, plus `/login` and `/unauthorized` — reachable for
 demonstration, but they never gate anything.
-
-`/app/coaching` and the Scorecard tab are **flag-gated off in production** and
-switched on here. Worth remembering if you're demoing to someone who will then
-go looking for them.
 
 ---
 
@@ -78,7 +78,7 @@ with the same rep, title and transcript. If you edit one, copy it to the other.
 ### Why the action modules kept their names
 
 Production's components call Server Actions by name (`renameCallAction`,
-`createCommentAction`, …). Because `lib/*/actions.ts` here export the same
+`saveNotesAction`, …). Because `lib/*/actions.ts` here export the same
 signatures and return the same shapes, almost every component was copied across
 with **no edits at all** — the store is swapped in underneath them.
 
@@ -99,9 +99,9 @@ also where the loading skeletons get to be visible.
 ## Relationship to production
 
 Copied unchanged from `sideline-ai-mvp`: `app/globals.css`, all of
-`components/ui/`, all of `components/app-shell/`, most of `components/calls/`
-and `components/coaching/`, and the pure logic in `lib/format.ts`,
-`lib/constants.ts`, `lib/calls/date-range.ts`, `lib/coaching/unread.ts`.
+`components/ui/`, all of `components/app-shell/`, most of `components/calls/`,
+and the pure logic in `lib/format.ts`, `lib/constants.ts` and
+`lib/calls/date-range.ts`.
 
 Deliberately **not** copied: `proxy.ts`, every API route, every Supabase client,
 the auth layer, the AssemblyAI/OpenAI pipeline, database migrations, and every

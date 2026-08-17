@@ -22,26 +22,20 @@ import type { CallRow, OrganizationMemberRow } from "@/lib/db/types";
 export function CallHeader({
   call,
   rep,
-  action,
 }: {
   call: CallRow;
   rep: OrganizationMemberRow | null;
-  /** Rendered top-right, opposite the back link. The coaching toggle. */
-  action?: React.ReactNode;
 }) {
   const repLabel = rep?.display_name || rep?.email || "Unknown rep";
 
   return (
     <header className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-3">
-        <Link
-          href="/app/calls"
-          className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to all calls
-        </Link>
-        {action}
-      </div>
+      <Link
+        href="/app/calls"
+        className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" /> Back to all calls
+      </Link>
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <EditableCallName callId={call.id} initialName={call.name} />

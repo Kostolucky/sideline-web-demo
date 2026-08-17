@@ -94,20 +94,6 @@ export interface ConversationAnalysisRow {
   created_at: string;
 }
 
-export interface CommentRow {
-  id: string;
-  call_id: string;
-  author_user_id: string;
-  target_rep_user_id: string;
-  body: string;
-  /** Playback offset this message is anchored to, if any. */
-  timestamp_ms: number | null;
-  /** Root comment id for a reply; null for a thread root. */
-  parent_id: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface TeamRow {
   id: string;
   name: string;
