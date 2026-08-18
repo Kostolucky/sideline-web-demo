@@ -17,18 +17,6 @@ export const TIMINGS = {
     /** "Processing" dwell before the call flips to ready. */
     processingMs: 6_000,
   },
-
-  /**
-   * The ask bar on call detail — how long the assistant appears to think
-   * before the first word, and how fast the reply then streams in.
-   *
-   * `tokenMs` is per token, and whitespace counts as a token, so a word lands
-   * roughly every 2× this. Matches the mobile app's chat.
-   */
-  chat: {
-    thinkingMs: 900,
-    tokenMs: 26,
-  },
 } as const;
 
 /**

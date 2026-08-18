@@ -30,10 +30,8 @@ function isFullBleed(pathname: string): boolean {
 export function ContentContainer({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // Call detail opts out entirely: it runs the full height of the viewport so
-  // the review content scrolls under a pinned ask bar, which can't happen
-  // inside a padded, max-width reading column. The page re-applies its own
-  // padding.
+  // Call detail opts out entirely: it renders its own header above the review
+  // tabs, so it needs to own the column and re-applies its own padding.
   if (isFullBleed(pathname)) return <>{children}</>;
 
   return (

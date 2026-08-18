@@ -46,7 +46,6 @@ npm run build
 | Upload → processing → ready | **Simulated.** ~12s after you finish a recording. |
 | Transcript, summary, insights | Real content, hardcoded. Nothing is generated. |
 | Notes, renames, team edits | Real, stored in memory for the session. |
-| Ask bar | **Simulated.** The reply is authored content, streamed in. |
 
 State lives in memory. **Reload and the sample data is pristine again** — which
 is what you want between demos. There's also a *Reset demo data* button on

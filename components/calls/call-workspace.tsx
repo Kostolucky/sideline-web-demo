@@ -8,13 +8,10 @@ import {
   type AudioPlayerHandle,
 } from "@/components/calls/audio-player";
 import { CallHeader } from "@/components/calls/call-header";
-import { AskBar } from "@/components/calls/ask-bar";
 import { cn } from "@/lib/utils";
-import { followUpReply } from "@/lib/calls/ask-reply";
 import type {
   CallRow,
   CallSummaryRow,
-  ConversationAnalysisRow,
   OrganizationMemberRow,
   TranscriptUtteranceRow,
 } from "@/lib/db/types";
@@ -42,7 +39,6 @@ export function CallWorkspace({
   call,
   rep,
   summary,
-  analysis,
   utterances,
   audioUrl,
   repName,
@@ -52,7 +48,6 @@ export function CallWorkspace({
   call: CallRow;
   rep: OrganizationMemberRow | null;
   summary: CallSummaryRow | null;
-  analysis: ConversationAnalysisRow | null;
   utterances: TranscriptUtteranceRow[];
   audioUrl: string | null;
   repName: string;
@@ -74,106 +69,94 @@ export function CallWorkspace({
   }, []);
 
   return (
-    // On xl the page fills the viewport: the review content scrolls inside it
-    // and the ask bar stays pinned to the bottom, so the composer is always to
-    // hand without chasing the end of a long transcript. This route opts out of
-    // the shared reading column (see `ContentContainer`) and puts its own
-    // padding back.
+    // A normal scrolling page. It briefly locked itself to the viewport height
+    // so a pinned ask bar could sit under a scrolling transcript; with the bar
+    // gone there is nothing to pin, and an inner scroller would only trap the
+    // transcript in a box while the page around it stayed still.
     //
-    // Below xl it unwinds into a normal stacked page that scrolls.
-    <div className="flex min-w-0 flex-col xl:h-dvh xl:overflow-hidden">
-      <div className="flex-1 xl:overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-[72rem] flex-1 flex-col gap-5 px-4 py-6 sm:px-6 lg:py-8">
-          <CallHeader call={call} rep={rep} />
+    // This route still opts out of the shared reading column (see
+    // `ContentContainer`) because it owns its own header, so it puts the
+    // padding back here.
+    <div className="min-w-0">
+      <div className="mx-auto flex w-full max-w-[72rem] flex-col gap-5 px-4 py-6 sm:px-6 lg:py-8">
+        <CallHeader call={call} rep={rep} />
 
-          <div className="flex min-w-0 flex-1 flex-col">
-            <div
-              role="tablist"
-              aria-label="Call review mode"
-              className="flex flex-wrap items-center gap-x-1 border-b border-border"
-            >
-              {TABS.map((t) => {
-                const selected = tab === t.value;
-                return (
-                  <button
-                    key={t.value}
-                    id={`call-tab-${t.value}`}
-                    role="tab"
-                    aria-selected={selected}
-                    aria-controls="call-tabpanel"
-                    onClick={() => setTab(t.value)}
-                    className={cn(
-                      "-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
-                      selected
-                        ? "border-brand-text text-foreground"
-                        : "border-transparent text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    {t.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div
-              id="call-tabpanel"
-              role="tabpanel"
-              aria-labelledby={`call-tab-${tab}`}
-              className="mt-4"
-            >
-              {/* Mounted in every tab, shown only in Recording — see above. */}
-              {hasAudio && (
-                <div
+        <div className="flex min-w-0 flex-col">
+          <div
+            role="tablist"
+            aria-label="Call review mode"
+            className="flex flex-wrap items-center gap-x-1 border-b border-border"
+          >
+            {TABS.map((t) => {
+              const selected = tab === t.value;
+              return (
+                <button
+                  key={t.value}
+                  id={`call-tab-${t.value}`}
+                  role="tab"
+                  aria-selected={selected}
+                  aria-controls="call-tabpanel"
+                  onClick={() => setTab(t.value)}
                   className={cn(
-                    tab === "recording"
-                      ? "sticky top-0 z-20 bg-background pb-3 pt-1"
-                      : "hidden",
+                    "-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
+                    selected
+                      ? "border-brand-text text-foreground"
+                      : "border-transparent text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  <AudioPlayer
-                    ref={playerRef}
-                    audioUrl={audioUrl}
-                    mimeType={call.audio_mime_type}
-                    durationSeconds={call.duration_seconds ?? 0}
-                    onTime={setCurrentMs}
-                    onPlayingChange={setPlaying}
-                  />
-                </div>
-              )}
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
 
-              {tab === "summary" && (
-                <SummaryView
-                  call={call}
-                  summary={summary}
-                  notes={notes}
-                  repName={repName}
-                  canEditNotes={isTargetRep}
+          <div
+            id="call-tabpanel"
+            role="tabpanel"
+            aria-labelledby={`call-tab-${tab}`}
+            className="mt-4"
+          >
+            {/* Mounted in every tab, shown only in Recording — see above. */}
+            {hasAudio && (
+              <div
+                className={cn(
+                  tab === "recording"
+                    ? "sticky top-0 z-20 bg-background pb-3 pt-1"
+                    : "hidden",
+                )}
+              >
+                <AudioPlayer
+                  ref={playerRef}
+                  audioUrl={audioUrl}
+                  mimeType={call.audio_mime_type}
+                  durationSeconds={call.duration_seconds ?? 0}
+                  onTime={setCurrentMs}
+                  onPlayingChange={setPlaying}
                 />
-              )}
-              {tab === "recording" && (
-                <TranscriptView
-                  utterances={utterances}
-                  currentMs={currentMs}
-                  playing={playing}
-                  onSeek={seek}
-                  hasAudio={hasAudio}
-                />
-              )}
-            </div>
+              </div>
+            )}
+
+            {tab === "summary" && (
+              <SummaryView
+                call={call}
+                summary={summary}
+                notes={notes}
+                repName={repName}
+                canEditNotes={isTargetRep}
+              />
+            )}
+            {tab === "recording" && (
+              <TranscriptView
+                utterances={utterances}
+                currentMs={currentMs}
+                playing={playing}
+                onSeek={seek}
+                hasAudio={hasAudio}
+              />
+            )}
           </div>
         </div>
       </div>
-
-      {/* Pinned under the review content — see AskBar. Summary only: on the
-          Recording tab the transcript is the thing being worked, and a second
-          composer under the player competes with it. */}
-      {tab === "summary" && (
-        <div className="shrink-0 bg-background">
-          <div className="mx-auto w-full max-w-[72rem] px-4 pb-4 pt-2 sm:px-6">
-            <AskBar reply={followUpReply(analysis, summary)} />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

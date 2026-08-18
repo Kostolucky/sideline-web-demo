@@ -8,8 +8,6 @@ import {
   type MemberOption,
 } from "@/components/calls/calls-filters";
 import { DemoGate } from "@/components/demo/demo-gate";
-import { AskBar } from "@/components/calls/ask-bar";
-import { todaysFollowUpsReply } from "@/lib/calls/ask-reply";
 import { buttonVariants } from "@/components/ui/button";
 import { useDemoState } from "@/lib/demo/use-demo";
 import { listCalls, listMembers } from "@/lib/queries";
@@ -45,18 +43,6 @@ export function CallsScreen() {
       userId: m.user_id as string,
       name: m.display_name || m.email,
     }));
-
-  // Built from the UNFILTERED list on purpose: narrowing the table shouldn't
-  // change what the assistant says is outstanding today.
-  const followUps = todaysFollowUpsReply(
-    listCalls(state).map((c) => ({
-      id: c.id,
-      name: c.name,
-      recordedAt: c.recorded_at,
-      repName: c.rep?.display_name || c.rep?.email || "Unknown rep",
-      nextStep: state.summaries[c.id]?.next_steps?.[0],
-    })),
-  );
 
   const filtersActive =
     Boolean(member) ||
@@ -115,22 +101,6 @@ export function CallsScreen() {
               ) : undefined
             }
           />
-        </div>
-
-        {/* The same bar as a call's Summary tab, floating over the list.
-            No `reply`: there is no single call to answer about here, so it is
-            inert — the surface exists, the answering does not. Positioning
-            lives here rather than in the component, since the two surfaces sit
-            in very different layouts. Raised above the mobile bottom nav and
-            offset past the sidebar on desktop. */}
-        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-30 px-4 lg:bottom-6 lg:left-64">
-          <div className="pointer-events-auto mx-auto w-full max-w-2xl">
-            <AskBar
-              reply={followUps}
-              placeholder="Ask anything"
-              actions={["What are today's follow-ups?"]}
-            />
-          </div>
         </div>
       </div>
     </DemoGate>
