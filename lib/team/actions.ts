@@ -8,13 +8,9 @@
 
 import {
   changeRole,
-  createTeam,
   deleteMember,
-  deleteTeam,
   getState,
   inviteMember,
-  setTeamManager,
-  setTeamMember,
 } from "@/lib/demo/store";
 import { isValidEmail, normalizeEmail } from "@/lib/utils";
 import type { MemberRole } from "@/lib/constants";
@@ -86,48 +82,5 @@ export async function deleteMemberAction(
   }
 
   deleteMember(memberId);
-  return { ok: true };
-}
-
-export async function createTeamAction(name: string): Promise<ActionResult> {
-  const guard = requireAdmin();
-  if (!guard.ok) return guard;
-
-  const trimmed = name.trim();
-  if (!trimmed) return { ok: false, error: "Give the team a name." };
-  if (getState().teams.some((t) => t.name.toLowerCase() === trimmed.toLowerCase())) {
-    return { ok: false, error: "There's already a team with that name." };
-  }
-
-  createTeam(trimmed);
-  return { ok: true };
-}
-
-export async function deleteTeamAction(teamId: string): Promise<ActionResult> {
-  const guard = requireAdmin();
-  if (!guard.ok) return guard;
-  deleteTeam(teamId);
-  return { ok: true };
-}
-
-export async function setTeamMemberAction(
-  teamId: string,
-  memberId: string,
-  assigned: boolean,
-): Promise<ActionResult> {
-  const guard = requireAdmin();
-  if (!guard.ok) return guard;
-  setTeamMember(teamId, memberId, assigned);
-  return { ok: true };
-}
-
-export async function setTeamManagerAction(
-  teamId: string,
-  memberId: string,
-  assigned: boolean,
-): Promise<ActionResult> {
-  const guard = requireAdmin();
-  if (!guard.ok) return guard;
-  setTeamManager(teamId, memberId, assigned);
   return { ok: true };
 }

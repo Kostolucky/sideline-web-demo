@@ -40,13 +40,6 @@ export interface CallDetail {
   audioUrl: string | null;
 }
 
-export interface TeamWithAssignments {
-  id: string;
-  name: string;
-  memberIds: string[];
-  managerIds: string[];
-}
-
 /* ------------------------------------------------------------------------ */
 /* Persona helpers                                                            */
 /* ------------------------------------------------------------------------ */
@@ -130,12 +123,6 @@ export function getCallDetail(
     // the player falls back to a simulated clock, which is the normal case.
     audioUrl: AUDIO_OVERRIDES[callId] ?? null,
   };
-}
-
-export function listTeamsWithAssignments(
-  state: DemoState,
-): TeamWithAssignments[] {
-  return state.teams;
 }
 
 export function listOrganizationsForOwner(state: DemoState) {

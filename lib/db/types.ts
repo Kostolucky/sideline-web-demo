@@ -93,8 +93,3 @@ export interface ConversationAnalysisRow {
   result: unknown;
   created_at: string;
 }
-
-export interface TeamRow {
-  id: string;
-  name: string;
-}
