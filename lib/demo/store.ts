@@ -23,14 +23,12 @@ import type {
   OrganizationRow,
   TranscriptUtteranceRow,
 } from "@/lib/db/types";
-import type { TeamWithAssignments } from "@/lib/queries";
 import {
   CALLS,
   DEFAULT_PERSONA_ID,
   ORGANIZATION,
   ORGANIZATIONS,
   PEOPLE,
-  TEAMS,
   atDaysAgo,
   isoDaysAgo,
   type DemoCall,
@@ -47,7 +45,6 @@ export interface DemoState {
   summaries: Record<string, CallSummaryRow>;
   analyses: Record<string, ConversationAnalysisRow>;
   utterances: Record<string, TranscriptUtteranceRow[]>;
-  teams: TeamWithAssignments[];
   /** Other workspaces, for the platform-owner console. */
   organizations: DemoOrganizationRow[];
 }
@@ -176,12 +173,6 @@ export function buildInitialState(): DemoState {
     summaries,
     analyses,
     utterances,
-    teams: TEAMS.map((t) => ({
-      id: t.id,
-      name: t.name,
-      memberIds: t.memberIds.map((id) => `member-${id}`),
-      managerIds: t.managerIds.map((id) => `member-${id}`),
-    })),
     organizations: ORGANIZATIONS.map((o) => ({
       ...o,
       createdAt: isoDaysAgo(o.createdDaysAgo, 9, 0),
@@ -295,65 +286,7 @@ export function changeRole(
 }
 
 export function deleteMember(memberId: string): void {
-  update({
-    members: state.members.filter((m) => m.id !== memberId),
-    teams: state.teams.map((t) => ({
-      ...t,
-      memberIds: t.memberIds.filter((id) => id !== memberId),
-      managerIds: t.managerIds.filter((id) => id !== memberId),
-    })),
-  });
-}
-
-export function createTeam(name: string): void {
-  update({
-    teams: [
-      ...state.teams,
-      { id: nextId("team"), name: name.trim(), memberIds: [], managerIds: [] },
-    ],
-  });
-}
-
-export function deleteTeam(teamId: string): void {
-  update({ teams: state.teams.filter((t) => t.id !== teamId) });
-}
-
-export function setTeamMember(
-  teamId: string,
-  memberId: string,
-  assigned: boolean,
-): void {
-  update({
-    teams: state.teams.map((t) =>
-      t.id === teamId
-        ? {
-            ...t,
-            memberIds: assigned
-              ? Array.from(new Set([...t.memberIds, memberId]))
-              : t.memberIds.filter((id) => id !== memberId),
-          }
-        : t,
-    ),
-  });
-}
-
-export function setTeamManager(
-  teamId: string,
-  memberId: string,
-  assigned: boolean,
-): void {
-  update({
-    teams: state.teams.map((t) =>
-      t.id === teamId
-        ? {
-            ...t,
-            managerIds: assigned
-              ? Array.from(new Set([...t.managerIds, memberId]))
-              : t.managerIds.filter((id) => id !== memberId),
-          }
-        : t,
-    ),
-  });
+  update({ members: state.members.filter((m) => m.id !== memberId) });
 }
 
 /* ---- Organizations (platform-owner console) ---- */

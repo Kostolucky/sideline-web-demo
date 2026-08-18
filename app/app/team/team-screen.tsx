@@ -2,22 +2,13 @@
 
 import { InviteForm } from "@/components/team/invite-form";
 import { MemberActions } from "@/components/team/member-actions";
-import {
-  TeamsManager,
-  type TeamMemberOption,
-} from "@/components/team/teams-manager";
 import { Avatar } from "@/components/ui/misc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DemoGate } from "@/components/demo/demo-gate";
 import { roleLabel } from "@/lib/format";
 import { toMemberRole } from "@/lib/constants";
 import { useDemoState } from "@/lib/demo/use-demo";
-import {
-  currentMember,
-  isAdmin as isAdminOf,
-  listMembers,
-  listTeamsWithAssignments,
-} from "@/lib/queries";
+import { currentMember, isAdmin as isAdminOf, listMembers } from "@/lib/queries";
 import Loading from "./loading";
 
 export function TeamScreen() {
@@ -25,11 +16,6 @@ export function TeamScreen() {
   const me = currentMember(state);
   const isAdmin = isAdminOf(state);
   const members = listMembers(state);
-  const teams = isAdmin ? listTeamsWithAssignments(state) : [];
-
-  const teamMemberOptions: TeamMemberOption[] = members
-    .filter((m) => m.status === "active")
-    .map((m) => ({ id: m.id, name: m.display_name || m.email }));
 
   return (
     <DemoGate fallback={<Loading />}>
@@ -54,21 +40,6 @@ export function TeamScreen() {
             </CardHeader>
             <CardContent>
               <InviteForm />
-            </CardContent>
-          </Card>
-        )}
-
-        {isAdmin && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Teams</CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Group reps under a manager. Managers see the conversations of
-                reps on the teams they manage.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <TeamsManager teams={teams} members={teamMemberOptions} />
             </CardContent>
           </Card>
         )}
